@@ -1,9 +1,6 @@
 package riot.riotapi.controllers.api;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import riot.riotapi.delegators.ChampionDelegator;
 import riot.riotapi.entities.ChampionData;
 
@@ -15,8 +12,8 @@ public class ChampionApiController {
     // default
   }
 
-  @GetMapping("/nombre/{champName}")
-  public ChampionData getChampionByName(@PathVariable String champName) {
+  @GetMapping("/nombre")
+  public ChampionData getChampionByName(@RequestParam("champName") String champName) {
     return ChampionDelegator.getChampionByName(champName);
   }
 
