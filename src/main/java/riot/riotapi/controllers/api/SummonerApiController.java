@@ -9,31 +9,35 @@ import riot.riotapi.services.implementations.ImpSummonerApiService;
 @RequestMapping("/invocador")
 public class SummonerApiController {
 
-  private ImpSummonerApiService summonerApiService;
-
   public SummonerApiController() {
     // default
-    summonerApiService = new ImpSummonerApiService();
   }
 
   @GetMapping("/nombre/{name}")
   public Summoner getSummonerByName(@PathVariable String name) {
-    Summoner sum = summonerApiService.getSummonerByName(name);
-
-    if (sum != null) {
-      SummonerDelegador.saveSummoner(sum);
-    }
+    Summoner sum = SummonerDelegador.getSummonerByName(name);
+    saveSummoner(sum);
     return sum;
   }
 
   @GetMapping("/idCuenta/{accountId}")
   public Summoner getSummonerByAccountId(@PathVariable String accountId) {
-    return summonerApiService.getSummonerByAccountId(accountId);
+    Summoner sum = SummonerDelegador.getSummonerByAccountId(accountId);
+    saveSummoner(sum);
+    return sum;
   }
 
   @GetMapping("/puuid/{puuid}")
   public Summoner getSummonerByPuuid(@PathVariable String puuid) {
-    return summonerApiService.getSummonerByPuuid(puuid);
+    Summoner sum = SummonerDelegador.getSummonerByPuuid(puuid);
+    saveSummoner(sum);
+    return sum;
+  }
+
+  private void saveSummoner(Summoner sum) {
+    if (sum != null) {
+      SummonerDelegador.saveSummoner(sum);
+    }
   }
 
 

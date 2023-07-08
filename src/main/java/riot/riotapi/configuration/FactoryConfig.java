@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import riot.riotapi.repositories.factories.PersistenceFactory;
 import riot.riotapi.repositories.interfaces.IntPersistenceSummoner;
 import riot.riotapi.services.ServiceFactory;
+import riot.riotapi.services.interfaces.IntSummonerApiService;
 import riot.riotapi.services.interfaces.IntSummonerService;
 
 @Configuration
@@ -19,6 +20,11 @@ public class FactoryConfig {
   @Autowired
   public void setIntSummonerService(IntSummonerService intSummonerService) {
     ServiceFactory.setIntSummonerService(intSummonerService);
+  }
+
+  @Autowired
+  public void setIntSummonerApiService(IntSummonerApiService intSummonerApiService) {
+    ServiceFactory.setIntSummonerApiService(intSummonerApiService);
   }
 
   //***************************** PERSISTENCE FACTORY *****************************//

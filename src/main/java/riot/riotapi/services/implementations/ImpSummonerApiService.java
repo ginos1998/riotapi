@@ -1,15 +1,15 @@
 package riot.riotapi.services.implementations;
 
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import riot.riotapi.delegators.SummonerDelegador;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
-import riot.riotapi.services.interfaces.IntSummonerService;
 import riot.riotapi.utils.URIs;
 
+@Service
 public class ImpSummonerApiService implements IntSummonerApiService {
   private WebClient webClient;
-  private final String apiKey = "RGAPI-8440711e-b278-4f39-bfa1-4116117fbd14";
+  private final String apiKey = "RGAPI-3925b306-ba95-4a89-b172-75db684cfa28";
 
   public ImpSummonerApiService() {
     this.webClient = WebClient.create();
