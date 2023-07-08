@@ -1,6 +1,5 @@
 package riot.riotapi.delegators;
 
-import org.springframework.web.bind.annotation.PathVariable;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.services.ServiceFactory;
 
