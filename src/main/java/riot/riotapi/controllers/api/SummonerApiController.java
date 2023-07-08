@@ -3,10 +3,9 @@ package riot.riotapi.controllers.api;
 import org.springframework.web.bind.annotation.*;
 import riot.riotapi.delegators.SummonerDelegador;
 import riot.riotapi.entities.Summoner;
-import riot.riotapi.services.implementations.ImpSummonerApiService;
 
 @RestController
-@RequestMapping("/invocador")
+@RequestMapping("/riot-api/las/invocador")
 public class SummonerApiController {
 
   public SummonerApiController() {
