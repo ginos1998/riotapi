@@ -1,6 +1,6 @@
 package riot.riotapi.services.implementations;
 
-import exceptions.ServiceFactoryException;
+import riot.riotapi.exceptions.ServiceFactoryException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import riot.riotapi.entities.Champion;
@@ -10,7 +10,6 @@ import riot.riotapi.services.interfaces.IntChampionApiService;
 import riot.riotapi.utils.CommonFunctions;
 import riot.riotapi.utils.URIs;
 
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Map;
 

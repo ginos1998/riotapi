@@ -1,6 +1,6 @@
 package riot.riotapi.controllers.api;
 
-import exceptions.ServiceFactoryException;
+import riot.riotapi.exceptions.ServiceFactoryException;
 import org.springframework.web.bind.annotation.*;
 import riot.riotapi.delegators.ChampionDelegator;
 import riot.riotapi.entities.ChampionData;

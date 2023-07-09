@@ -1,6 +1,6 @@
 package riot.riotapi.services.interfaces;
 
-import exceptions.ServiceFactoryException;
+import riot.riotapi.exceptions.ServiceFactoryException;
 import riot.riotapi.entities.ChampionData;
 
 public interface IntChampionApiService {
