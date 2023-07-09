@@ -23,4 +23,6 @@ public class Champion {
   private ArrayList<Spell> spells;
   private Passive passive;
   private ArrayList<Object> recommended;
+
+  private Long champDataId;
 }
