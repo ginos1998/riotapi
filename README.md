@@ -23,7 +23,7 @@ y tiene tres endpoints:
    3. [POST] /importar/todos : importa todos los campeones y los almacena en la base de datos, con sus propiedades. Retorna 'OK' si todo salió bien.
 
 En 2, se consume la API de Riot Games. Para ello, debemos tener una cuenta y logearnos en la [página para desarrolladores](https://developer.riotgames.com/). 
-Una vez logeados, podemos generar la apikey (que vence en 24 hs) y cambiarla en la clase Constants.
+Una vez logeados, podemos generar la apikey (que vence en 24 hs) y cambiarla en la clase [Constants](https://github.com/ginos1998/riotapi/blob/main/src/main/java/riot/riotapi/utils/Constants.java).
 Hecho ésto, tenemos tres endpoints:
 
 1. /riot-api/las/invocador
@@ -33,7 +33,7 @@ Hecho ésto, tenemos tres endpoints:
 
 ## Base de Datos
 
-Los datos de invocadores y campeones se guardan en las siguientes tablas, que se encuentran en la carpeta database:
+Los datos de invocadores y campeones se guardan en las siguientes tablas, que se encuentran en la carpeta [databse](https://github.com/ginos1998/riotapi/tree/main/src/main/database/versions):
 
 - summoner
 - champ_data
