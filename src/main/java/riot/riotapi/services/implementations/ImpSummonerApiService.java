@@ -4,12 +4,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
+import riot.riotapi.utils.Constants;
 import riot.riotapi.utils.URIs;
+
+import java.lang.constant.Constable;
 
 @Service
 public class ImpSummonerApiService implements IntSummonerApiService {
   private WebClient webClient;
-  private final String apiKey = "RGAPI-6fedbeae-50fb-4247-81de-b2764ac51ed9";
 
   public ImpSummonerApiService() {
     this.webClient = WebClient.create();
@@ -17,14 +19,14 @@ public class ImpSummonerApiService implements IntSummonerApiService {
 
   private SummonerDTO getQueryParamResult(String url, String param) {
     return webClient.get()
-        .uri(url, param, apiKey)
+        .uri(url, param, Constants.apiKey)
         .retrieve()
         .bodyToMono(SummonerDTO.class)
         .block();
   }
 
   private String getApiKeyURLFormat() {
-    return "?api_key=" + apiKey;
+    return "?api_key=" + Constants.apiKey;
   }
 
   @Override
