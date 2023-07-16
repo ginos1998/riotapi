@@ -1,48 +1,50 @@
 package riot.riotapi.services.implementations;
 
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import riot.riotapi.delegators.SummonerDelegador;
-import riot.riotapi.entities.Summoner;
+import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
-import riot.riotapi.services.interfaces.IntSummonerService;
+import riot.riotapi.utils.Constants;
 import riot.riotapi.utils.URIs;
 
+import java.lang.constant.Constable;
+
+@Service
 public class ImpSummonerApiService implements IntSummonerApiService {
   private WebClient webClient;
-  private final String apiKey = "RGAPI-8440711e-b278-4f39-bfa1-4116117fbd14";
 
   public ImpSummonerApiService() {
     this.webClient = WebClient.create();
   }
 
-  private Summoner getQueryParamResult(String url, String param) {
+  private SummonerDTO getQueryParamResult(String url, String param) {
     return webClient.get()
-        .uri(url, param, apiKey)
+        .uri(url, param, Constants.apiKey)
         .retrieve()
-        .bodyToMono(Summoner.class)
+        .bodyToMono(SummonerDTO.class)
         .block();
   }
 
   private String getApiKeyURLFormat() {
-    return "?api_key=" + apiKey;
+    return "?api_key=" + Constants.apiKey;
   }
 
   @Override
-  public Summoner getSummonerByName(String name) {
+  public SummonerDTO getSummonerByName(String name) {
     String url = URIs.URI_SUMMONER_ACCOUNT_NAME + name + getApiKeyURLFormat();
 
     return getQueryParamResult(url, name);
   }
 
   @Override
-  public Summoner getSummonerByAccountId(String accountId) {
+  public SummonerDTO getSummonerByAccountId(String accountId) {
     String url = URIs.URI_SUMMONER_ACCOUNT_ID + accountId + getApiKeyURLFormat();
 
     return getQueryParamResult(url, accountId);
   }
 
   @Override
-  public Summoner getSummonerByPuuid(String puuid) {
+  public SummonerDTO getSummonerByPuuid(String puuid) {
     String url = URIs.URI_SUMMONER_ACCOUNT_PUUID + puuid + getApiKeyURLFormat();
 
     return getQueryParamResult(url, puuid);
