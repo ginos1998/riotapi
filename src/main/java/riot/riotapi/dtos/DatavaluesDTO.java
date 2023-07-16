@@ -1,8 +1,8 @@
-package riot.riotapi.entities;
+package riot.riotapi.dtos;
 
 import lombok.Data;
 
 @Data
-public class Datavalues {
+public class DatavaluesDTO {
   private String datavalue;
 }

@@ -3,9 +3,7 @@ package riot.riotapi.configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import riot.riotapi.repositories.factories.PersistenceFactory;
-import riot.riotapi.repositories.interfaces.IntPersistenceChampion;
-import riot.riotapi.repositories.interfaces.IntPersistenceChampionData;
-import riot.riotapi.repositories.interfaces.IntPersistenceSummoner;
+import riot.riotapi.repositories.interfaces.*;
 import riot.riotapi.services.ServiceFactory;
 import riot.riotapi.services.interfaces.IntChampionApiService;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
@@ -47,7 +45,18 @@ public class FactoryConfig {
     PersistenceFactory.setIntPersistenceChampionData(intPersistenceChampionData);
   }
 
-  public void setIntPersistenceChampion(IntPersistenceChampion intPersistenceChampion) {
+  @Autowired
+  public void setIntPersistenceChampion(IntPersistenceChampion intPersistenceChampion){
     PersistenceFactory.setIntPersistenceChampion(intPersistenceChampion);
+  }
+
+  @Autowired
+  public void setIntPersistenceInfo(IntPersistenceInfo intPersistenceInfo) {
+    PersistenceFactory.setIntPersistenceInfo(intPersistenceInfo);
+  }
+
+  @Autowired
+  public void setIntPersistenceStats(IntPersistenceStats intPersistenceStats) {
+    PersistenceFactory.setIntPersistenceStats(intPersistenceStats);
   }
 }

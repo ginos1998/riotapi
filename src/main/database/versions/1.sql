@@ -7,8 +7,8 @@ CREATE DATABASE riot
     CONNECTION LIMIT = -1
     IS_TEMPLATE = False;
 
--- summoner datatable
-create table summoner
+-- summonerDTO datatable
+create table summonerDTO
 (
     id              varchar not null
         constraint id_pk
@@ -21,13 +21,13 @@ create table summoner
     summoner_level  integer
 );
 
-comment on table summoner is 'riot summoner';
+comment on table summonerDTO is 'riot summonerDTO';
 
-alter table summoner
+alter table summonerDTO
     owner to ginos;
 
 create index index_name
-    on summoner (id);
+    on summonerDTO (id);
 
 --
 COMMIT;

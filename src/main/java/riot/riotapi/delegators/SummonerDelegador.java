@@ -1,5 +1,6 @@
 package riot.riotapi.delegators;
 
+import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.services.ServiceFactory;
 
@@ -13,15 +14,15 @@ public class SummonerDelegador {
     ServiceFactory.getIntSummonerService().saveSummoner(summoner);
   }
 
-  public static Summoner getSummonerByName(String name) {
+  public static SummonerDTO getSummonerByName(String name) {
     return ServiceFactory.getIntSummonerApiService().getSummonerByName(name);
   }
 
-  public static Summoner getSummonerByAccountId(String accountId) {
+  public static SummonerDTO getSummonerByAccountId(String accountId) {
     return ServiceFactory.getIntSummonerApiService().getSummonerByAccountId(accountId);
   }
 
-  public static Summoner getSummonerByPuuid(String puuid) {
+  public static SummonerDTO getSummonerByPuuid(String puuid) {
     return ServiceFactory.getIntSummonerApiService().getSummonerByPuuid(puuid);
   }
 }

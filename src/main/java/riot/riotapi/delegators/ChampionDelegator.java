@@ -1,7 +1,7 @@
 package riot.riotapi.delegators;
 
 import riot.riotapi.exceptions.ServiceFactoryException;
-import riot.riotapi.entities.ChampionData;
+import riot.riotapi.dtos.ChampionDataDTO;
 import riot.riotapi.services.ServiceFactory;
 
 public class ChampionDelegator {
@@ -10,11 +10,11 @@ public class ChampionDelegator {
     // default
   }
 
-  public static ChampionData getChampionByName(String champName) {
+  public static ChampionDataDTO getChampionByName(String champName) {
     return ServiceFactory.getIntChampionApiService().getChampionByName(champName);
   }
 
-  public static ChampionData getAllChampions() {
+  public static ChampionDataDTO getAllChampions() {
     return ServiceFactory.getIntChampionApiService().getAllChampions();
   }
 

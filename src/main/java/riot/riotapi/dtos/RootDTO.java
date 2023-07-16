@@ -1,9 +1,9 @@
-package riot.riotapi.entities;
+package riot.riotapi.dtos;
 
 import lombok.Data;
 
 @Data
-public class Root {
+public class RootDTO {
   private String type;
   private String format;
   private String version;

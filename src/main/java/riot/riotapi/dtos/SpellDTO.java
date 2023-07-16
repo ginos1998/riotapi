@@ -1,22 +1,22 @@
-package riot.riotapi.entities;
+package riot.riotapi.dtos;
 
 import lombok.Data;
 
 import java.util.ArrayList;
 
 @Data
-public class Spell {
+public class SpellDTO {
   private String id;
   private String name;
   private String description;
   private String tooltip;
-  private Leveltip leveltip;
+  private LeveltipDTO leveltipDTO;
   private Integer maxrank;
   private ArrayList<Integer> cooldown;
   private String cooldownBurn;
   private ArrayList<Integer> cost;
   private String costBurn;
-  private Datavalues datavalues;
+  private DatavaluesDTO datavaluesDTO;
   private ArrayList<ArrayList<Integer>> effect;
   private ArrayList<String> effectBurn;
   private ArrayList<Object> vars;
@@ -24,6 +24,6 @@ public class Spell {
   private String maxammo;
   private ArrayList<Integer> range;
   private String rangeBurn;
-  private Image image;
+  private ImageDTO imageDTO;
   private String resource;
 }

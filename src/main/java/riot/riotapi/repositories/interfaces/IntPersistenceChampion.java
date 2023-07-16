@@ -5,5 +5,4 @@ import riot.riotapi.entities.Champion;
 
 public interface IntPersistenceChampion extends JpaRepository<Champion, Long> {
 
-  String saveAllChampions(Long champDataId);
 }

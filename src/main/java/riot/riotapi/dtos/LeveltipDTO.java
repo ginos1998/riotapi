@@ -1,11 +1,11 @@
-package riot.riotapi.entities;
+package riot.riotapi.dtos;
 
 import lombok.Data;
 
 import java.util.ArrayList;
 
 @Data
-public class Leveltip {
+public class LeveltipDTO {
   private ArrayList<String> label;
   private ArrayList<String> effect;
 }

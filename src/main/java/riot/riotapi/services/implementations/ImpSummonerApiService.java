@@ -2,24 +2,24 @@ package riot.riotapi.services.implementations;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import riot.riotapi.entities.Summoner;
+import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
 import riot.riotapi.utils.URIs;
 
 @Service
 public class ImpSummonerApiService implements IntSummonerApiService {
   private WebClient webClient;
-  private final String apiKey = "RGAPI-3925b306-ba95-4a89-b172-75db684cfa28";
+  private final String apiKey = "RGAPI-6fedbeae-50fb-4247-81de-b2764ac51ed9";
 
   public ImpSummonerApiService() {
     this.webClient = WebClient.create();
   }
 
-  private Summoner getQueryParamResult(String url, String param) {
+  private SummonerDTO getQueryParamResult(String url, String param) {
     return webClient.get()
         .uri(url, param, apiKey)
         .retrieve()
-        .bodyToMono(Summoner.class)
+        .bodyToMono(SummonerDTO.class)
         .block();
   }
 
@@ -28,21 +28,21 @@ public class ImpSummonerApiService implements IntSummonerApiService {
   }
 
   @Override
-  public Summoner getSummonerByName(String name) {
+  public SummonerDTO getSummonerByName(String name) {
     String url = URIs.URI_SUMMONER_ACCOUNT_NAME + name + getApiKeyURLFormat();
 
     return getQueryParamResult(url, name);
   }
 
   @Override
-  public Summoner getSummonerByAccountId(String accountId) {
+  public SummonerDTO getSummonerByAccountId(String accountId) {
     String url = URIs.URI_SUMMONER_ACCOUNT_ID + accountId + getApiKeyURLFormat();
 
     return getQueryParamResult(url, accountId);
   }
 
   @Override
-  public Summoner getSummonerByPuuid(String puuid) {
+  public SummonerDTO getSummonerByPuuid(String puuid) {
     String url = URIs.URI_SUMMONER_ACCOUNT_PUUID + puuid + getApiKeyURLFormat();
 
     return getQueryParamResult(url, puuid);

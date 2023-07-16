@@ -3,7 +3,7 @@ package riot.riotapi.controllers.api;
 import riot.riotapi.exceptions.ServiceFactoryException;
 import org.springframework.web.bind.annotation.*;
 import riot.riotapi.delegators.ChampionDelegator;
-import riot.riotapi.entities.ChampionData;
+import riot.riotapi.dtos.ChampionDataDTO;
 
 @RestController
 @RequestMapping("/riot-api/campeon")
@@ -14,12 +14,12 @@ public class ChampionApiController {
   }
   // ************************* GET METHODS ************************* //
   @GetMapping("/nombre")
-  public ChampionData getChampionByName(@RequestParam("champName") String champName) {
+  public ChampionDataDTO getChampionByName(@RequestParam("champName") String champName) {
     return ChampionDelegator.getChampionByName(champName);
   }
 
   @GetMapping("/todos")
-  public ChampionData getAllChampions() {
+  public ChampionDataDTO getAllChampions() {
     return ChampionDelegator.getAllChampions();
   }
 

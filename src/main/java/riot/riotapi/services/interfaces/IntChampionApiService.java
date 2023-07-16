@@ -1,13 +1,13 @@
 package riot.riotapi.services.interfaces;
 
 import riot.riotapi.exceptions.ServiceFactoryException;
-import riot.riotapi.entities.ChampionData;
+import riot.riotapi.dtos.ChampionDataDTO;
 
 public interface IntChampionApiService {
 
-  ChampionData getChampionByName(String champName);
+  ChampionDataDTO getChampionByName(String champName);
 
-  ChampionData getAllChampions();
+  ChampionDataDTO getAllChampions();
 
   String importAllChampions() throws ServiceFactoryException;
 }

@@ -1,9 +1,9 @@
-package riot.riotapi.entities;
+package riot.riotapi.dtos;
 
 import lombok.Data;
 
 @Data
-public class Image {
+public class ImageDTO {
   private String full;
   private String sprite;
   private String group;

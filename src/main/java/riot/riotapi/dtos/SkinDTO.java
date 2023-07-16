@@ -1,9 +1,9 @@
-package riot.riotapi.entities;
+package riot.riotapi.dtos;
 
 import lombok.Data;
 
 @Data
-public class Skin {
+public class SkinDTO {
   private String id;
   private int num;
   private String name;

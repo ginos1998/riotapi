@@ -1,6 +1,7 @@
 package riot.riotapi.services.implementations;
 
 import org.springframework.stereotype.Service;
+import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.repositories.factories.PersistenceFactory;
 import riot.riotapi.services.interfaces.IntSummonerService;

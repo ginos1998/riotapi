@@ -1,28 +1,26 @@
 package riot.riotapi.entities;
 
+import jakarta.persistence.*;
 import lombok.Data;
+import riot.riotapi.dtos.*;
 
 import java.util.ArrayList;
 
 @Data
+@Entity
+@Table(name = "champion")
 public class Champion {
+  // Champion's fields
+  @Id
+  @Column(name = "key")
+  private Long key;
+  @Column(name = "id")
   private String id;
-  private String key;
+  @OneToOne
+  @JoinColumn(name = "id_champ_data")
+  private ChampionData champData;
+  @Column(name = "name")
   private String name;
+  @Column(name = "title")
   private String title;
-  private Image image;
-  private ArrayList<Skin> skins;
-  private String lore;
-  private String blurb;
-  private ArrayList<String> allytips;
-  private ArrayList<String> enemytips;
-  private ArrayList<String> tags;
-  private String partype;
-  private Info info;
-  private Stats stats;
-  private ArrayList<Spell> spells;
-  private Passive passive;
-  private ArrayList<Object> recommended;
-
-  private Long champDataId;
 }
