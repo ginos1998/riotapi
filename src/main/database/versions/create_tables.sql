@@ -87,4 +87,16 @@ comment on table summoner is 'riot summoner';
 create index index_name
     on summoner (id);
 
+-- auto-generated definition
+create table riot_api
+(
+    id_riot_api serial
+        constraint riot_api_pk_id
+            primary key,
+    username    text not null,
+    password    text not null,
+    api_key     text not null,
+    last_update date not null
+);
+
 COMMIT;

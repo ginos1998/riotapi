@@ -8,6 +8,7 @@ public class PersistenceFactory {
   private static IntPersistenceChampion intPersistenceChampion;
   private static IntPersistenceInfo intPersistenceInfo;
   private static IntPersistenceStats intPersistenceStats;
+  private static IntRiotApi intRiotApi;
 
   private PersistenceFactory() {
     // default
@@ -51,5 +52,13 @@ public class PersistenceFactory {
 
   public static void setIntPersistenceStats(IntPersistenceStats intPersistenceStats) {
     PersistenceFactory.intPersistenceStats = intPersistenceStats;
+  }
+
+  public static IntRiotApi getIntRiotApi() {
+    return intRiotApi;
+  }
+
+  public static void setIntRiotApi(IntRiotApi intRiotApi) {
+    PersistenceFactory.intRiotApi = intRiotApi;
   }
 }
