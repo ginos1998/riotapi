@@ -59,4 +59,9 @@ public class FactoryConfig {
   public void setIntPersistenceStats(IntPersistenceStats intPersistenceStats) {
     PersistenceFactory.setIntPersistenceStats(intPersistenceStats);
   }
+
+  @Autowired
+  public void setIntRiotApi(IntRiotApi intRiotApi) {
+    PersistenceFactory.setIntRiotApi(intRiotApi);
+  }
 }
