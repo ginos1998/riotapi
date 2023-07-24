@@ -12,4 +12,8 @@ public class CommonFunctions {
   public static boolean isNotNullOrEmpty(Map<String, ChampionDTO> map) {
     return map != null && !map.isEmpty();
   }
+
+  public static boolean isNotNullOrEmpty(String str) {
+    return str != null && !str.isEmpty();
+  }
 }
