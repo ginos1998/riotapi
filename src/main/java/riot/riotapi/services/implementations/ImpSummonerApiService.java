@@ -6,6 +6,7 @@ import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.entities.RiotApi;
 import riot.riotapi.repositories.factories.PersistenceFactory;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
+import riot.riotapi.utils.CommonFunctions;
 import riot.riotapi.utils.Constants;
 import riot.riotapi.utils.URIs;
 
@@ -18,12 +19,21 @@ public class ImpSummonerApiService implements IntSummonerApiService {
   private String apiKey;
 
   public ImpSummonerApiService() {
+    // default
+  }
+
+  private void initApiKey() {
     this.webClient = WebClient.create();
     Optional<RiotApi> riotApi = PersistenceFactory.getIntRiotApi().findById(1L);
     apiKey = riotApi.map(RiotApi::getApiKey).orElse(null);
   }
 
   private SummonerDTO getQueryParamResult(String url, String param) {
+
+    if (!CommonFunctions.isNotNullOrEmpty(apiKey)) {
+      initApiKey();
+    }
+
     return webClient.get()
         .uri(url, param, apiKey)
         .retrieve()
