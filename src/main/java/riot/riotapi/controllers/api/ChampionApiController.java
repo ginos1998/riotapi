@@ -1,26 +1,32 @@
 package riot.riotapi.controllers.api;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import riot.riotapi.exceptions.ServiceFactoryException;
 import org.springframework.web.bind.annotation.*;
 import riot.riotapi.delegators.ChampionDelegator;
 import riot.riotapi.dtos.ChampionDataDTO;
 
+@Slf4j
 @RestController
 @RequestMapping("/riot-api/campeon")
 public class ChampionApiController {
 
-  private ChampionApiController() {
-    // default
+  private final ChampionDelegator championDelegator;
+
+  @Autowired
+  public ChampionApiController(ChampionDelegator championDelegator) {
+    this.championDelegator = championDelegator;
   }
   // ************************* GET METHODS ************************* //
   @GetMapping("/nombre")
   public ChampionDataDTO getChampionByName(@RequestParam("champName") String champName) {
-    return ChampionDelegator.getChampionByName(champName);
+    return this.championDelegator.getChampionByName(champName);
   }
 
   @GetMapping("/todos")
   public ChampionDataDTO getAllChampions() {
-    return ChampionDelegator.getAllChampions();
+    return this.championDelegator.getAllChampions();
   }
 
   // ************************* POST METHODS ************************* //
@@ -28,9 +34,9 @@ public class ChampionApiController {
   public String importAllChampions() {
     String response = "ERROR";
     try {
-      response = ChampionDelegator.importAllChampions();
+      response = this.championDelegator.importAllChampions();
     } catch (ServiceFactoryException sfe) {
-      System.out.println(sfe.getMessage());
+      log.info(sfe.getMessage());
     }
     return response;
   }
