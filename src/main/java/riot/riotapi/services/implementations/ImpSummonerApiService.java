@@ -4,27 +4,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.entities.RiotApi;
-import riot.riotapi.repositories.factories.PersistenceFactory;
+import riot.riotapi.repositories.interfaces.IntRiotApi;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
 import riot.riotapi.utils.CommonFunctions;
-import riot.riotapi.utils.Constants;
 import riot.riotapi.utils.URIs;
 
-import java.lang.constant.Constable;
 import java.util.Optional;
 
 @Service
 public class ImpSummonerApiService implements IntSummonerApiService {
+  private final IntRiotApi intRiotApi;
   private WebClient webClient;
   private String apiKey;
 
-  public ImpSummonerApiService() {
-    // default
+  public ImpSummonerApiService(IntRiotApi intRiotApi) {
+    this.intRiotApi = intRiotApi;
   }
 
   private void initApiKey() {
     this.webClient = WebClient.create();
-    Optional<RiotApi> riotApi = PersistenceFactory.getIntRiotApi().findById(1L);
+    Optional<RiotApi> riotApi = this.intRiotApi.findById(1L);
     apiKey = riotApi.map(RiotApi::getApiKey).orElse(null);
   }
 
