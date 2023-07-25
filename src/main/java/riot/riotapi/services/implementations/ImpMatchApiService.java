@@ -1,35 +1,41 @@
 package riot.riotapi.services.implementations;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
-import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.match.MatchesDTO;
+import riot.riotapi.entities.RiotApi;
 import riot.riotapi.filters.MatchFilter;
-import riot.riotapi.repositories.factories.PersistenceFactory;
+import riot.riotapi.repositories.interfaces.IntRiotApi;
 import riot.riotapi.services.interfaces.IntMatchApiService;
-import riot.riotapi.utils.Constants;
+import riot.riotapi.utils.CommonFunctions;
 import riot.riotapi.utils.URIs;
 
-import java.lang.constant.Constable;
-import java.util.ArrayList;
-import java.util.List;
-
 @Service
-public class ImpMatchApiService extends ImpApiService implements IntMatchApiService {
+public class ImpMatchApiService implements IntMatchApiService {
 
-  public ImpMatchApiService() {
-    super(WebClient.create(), PersistenceFactory.getIntRiotApi().findById(1L));
+  private final IntRiotApi intRiotApi;
+  private final WebClient webClient;
+  private String apiKey;
+  @Autowired
+  public ImpMatchApiService(IntRiotApi intRiotApi) {
+    this.intRiotApi = intRiotApi;
+    this.webClient = WebClient.create();
   }
 
   @Override
   public MatchesDTO getMatchesByPuuid(MatchFilter filter) {
-    MatchesDTO matchesDTOList = this.webClient.get()
+
+    if (!CommonFunctions.isNotNullOrEmpty(apiKey)) {
+      RiotApi riotApi = this.intRiotApi.findById(1L).orElse(null);
+      apiKey = riotApi != null ? riotApi.getApiKey() : "";
+    }
+
+    return this.webClient.get()
         .uri(addParamsToUri(filter), this.apiKey)
         .retrieve()
         .bodyToMono(MatchesDTO.class)
         .block();
-    return matchesDTOList;
   }
 
   private String addParamsToUri(MatchFilter filter) {
