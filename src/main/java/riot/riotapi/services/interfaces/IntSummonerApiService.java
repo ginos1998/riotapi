@@ -2,8 +2,10 @@ package riot.riotapi.services.interfaces;
 
 import riot.riotapi.dtos.SummonerDTO;
 
+import java.util.List;
+
 public interface IntSummonerApiService {
-  SummonerDTO getSummonerByName(String name);
-  SummonerDTO getSummonerByAccountId(String accountId);
+  List<SummonerDTO> getSummonerByName(String name);
+  List<SummonerDTO> getSummonerByAccountId(String accountId);
   SummonerDTO getSummonerByPuuid(String puuid);
 }
