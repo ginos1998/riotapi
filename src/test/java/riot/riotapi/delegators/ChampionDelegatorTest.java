@@ -7,7 +7,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import riot.riotapi.dtos.ChampionDTO;
 import riot.riotapi.dtos.ChampionDataDTO;
-import riot.riotapi.exceptions.ServiceFactoryException;
+import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.services.interfaces.IntChampionApiService;
 import org.junit.Before;
 
@@ -65,7 +65,7 @@ public class ChampionDelegatorTest {
   }
 
   @Test
-  public void importAllChampions_PositiveTest() throws ServiceFactoryException {
+  public void importAllChampions_PositiveTest() throws ServiceException {
     // given
     String givenResponse = "OK";
 
