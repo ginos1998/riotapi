@@ -50,6 +50,7 @@ public class SummonerDelegatorTest {
     SummonerDTO expectedSummoner = new SummonerDTO(id, accountId, puuid, name, 0, 0, 0);
     List<SummonerDTO> expectedList = new ArrayList<>(Collections.singletonList(expectedSummoner));
     String expectedName = "pepito";
+    ModelMapper mapper = new ModelMapper();
 
     // then
     when(summonerServiceMock.getSummonerByName(expectedName))
@@ -60,6 +61,7 @@ public class SummonerDelegatorTest {
 
     verify(summonerApiServiceMock, times(0)).getSummonerByName(expectedName);
     verify(summonerServiceMock, times(1)).getSummonerByName(expectedName);
+    verify(summonerServiceMock, times(0)).saveSummoner(mapper.map(receivedList.get(0), Summoner.class));
     Assert.assertNotNull(receivedList);
     Assert.assertEquals(receivedList, expectedList);
 
@@ -79,7 +81,7 @@ public class SummonerDelegatorTest {
     String name = "pepito";
     SummonerDTO expectedSummoner = new SummonerDTO(id, accountId, puuid, name, 0, 0, 0);
     List<SummonerDTO> expectedList = new ArrayList<>(Collections.singletonList(expectedSummoner));
-    String expectedName = "pepito";
+    String expectedName = "pepito ";
     ModelMapper mapper = new ModelMapper();
 
     // then
@@ -129,7 +131,7 @@ public class SummonerDelegatorTest {
 
     verify(summonerServiceMock, times(1)).getSummonerByPuuid(expectedPuuid);
     verify(summonerApiServiceMock, times(1)).getSummonerByPuuid(expectedPuuid);
-    verify(summonerApiServiceMock, times(1)).getSummonerByPuuid(expectedPuuid);
+    verify(summonerServiceMock, times(1)).saveSummoner(mapper.map(receivedList.get(0), Summoner.class));
     Assert.assertNotNull(receivedList);
     Assert.assertEquals(receivedList, expectedList);
   }
@@ -152,7 +154,6 @@ public class SummonerDelegatorTest {
     ModelMapper mapper = new ModelMapper();
 
     // then
-
     when(summonerServiceMock.getSummonerByPuuid(expectedPuuid))
         .thenReturn(expectedList);
 
@@ -161,7 +162,7 @@ public class SummonerDelegatorTest {
 
     verify(summonerServiceMock, times(1)).getSummonerByPuuid(expectedPuuid);
     verify(summonerApiServiceMock, times(0)).getSummonerByPuuid(expectedPuuid);
-    verify(summonerApiServiceMock, times(0)).getSummonerByPuuid(expectedPuuid);
+    verify(summonerServiceMock, times(0)).saveSummoner(mapper.map(receivedList.get(0), Summoner.class));
     Assert.assertNotNull(receivedList);
     Assert.assertEquals(receivedList, expectedList);
   }
@@ -191,7 +192,7 @@ public class SummonerDelegatorTest {
 
     verify(summonerServiceMock, times(1)).getSummonerByAccountId(expectedAccountId);
     verify(summonerApiServiceMock, times(0)).getSummonerByAccountId(expectedAccountId);
-    verify(summonerApiServiceMock, times(0)).getSummonerByAccountId(expectedAccountId);
+    verify(summonerServiceMock, times(0)).saveSummoner(mapper.map(receivedList.get(0), Summoner.class));
     Assert.assertNotNull(receivedList);
     Assert.assertEquals(receivedList, expectedList);
   }
@@ -225,7 +226,7 @@ public class SummonerDelegatorTest {
 
     verify(summonerServiceMock, times(1)).getSummonerByAccountId(expectedAccountId);
     verify(summonerApiServiceMock, times(1)).getSummonerByAccountId(expectedAccountId);
-    verify(summonerApiServiceMock, times(1)).getSummonerByAccountId(expectedAccountId);
+    verify(summonerServiceMock, times(1)).saveSummoner(mapper.map(receivedList.get(0), Summoner.class));
     Assert.assertNotNull(receivedList);
     Assert.assertEquals(receivedList, expectedList);
   }
