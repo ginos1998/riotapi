@@ -1,10 +1,13 @@
 package riot.riotapi.controllers.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import riot.riotapi.delegators.SummonerDelegador;
 import riot.riotapi.dtos.SummonerDTO;
-import riot.riotapi.dtos.mappers.imp.SummonerMapper;
+import riot.riotapi.utils.CommonFunctions;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/riot-api/las/invocador")
@@ -17,33 +20,19 @@ public class SummonerApiController {
     this.summonerDelegador = summonerDelegador;
   }
 
-  @GetMapping("/nombre/{name}")
-  public SummonerDTO getSummonerByName(@PathVariable String name) {
-    SummonerDTO sum = this.summonerDelegador.getSummonerByName(name);
-    saveSummoner(sum);
-    return sum;
-  }
+  @GetMapping()
+  public ResponseEntity<List<SummonerDTO>> getSummonerBy(@RequestParam(required = false) String name,
+                                                         @RequestParam(required = false) String accountId,
+                                                         @RequestParam(required = false) String puuid,
+                                                         @RequestParam(required = false, defaultValue = "false") Boolean saveIfExists) {
 
-  @GetMapping("/idCuenta/{accountId}")
-  public SummonerDTO getSummonerByAccountId(@PathVariable String accountId) {
-    SummonerDTO sum = this.summonerDelegador.getSummonerByAccountId(accountId);
-    saveSummoner(sum);
-    return sum;
-  }
+    List<SummonerDTO> sum = this.summonerDelegador.getSummonerBy(name, accountId, puuid, saveIfExists);
 
-  @GetMapping("/puuid/{puuid}")
-  public SummonerDTO getSummonerByPuuid(@PathVariable String puuid) {
-    SummonerDTO sum = this.summonerDelegador.getSummonerByPuuid(puuid);
-    saveSummoner(sum);
-    return sum;
-  }
-
-  private void saveSummoner(SummonerDTO sum) {
-    if (sum != null) {
-      SummonerMapper mapper = new SummonerMapper();
-      this.summonerDelegador.saveSummoner(mapper.toSummoner(sum));
+    if (CommonFunctions.isNotNullOrEmpty(sum)){
+      return ResponseEntity.ok(sum);
+    } else {
+      return ResponseEntity.noContent().build();
     }
   }
-
 
 }

@@ -4,11 +4,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.entities.RiotApi;
+import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.repositories.interfaces.IntRiotApi;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
 import riot.riotapi.utils.CommonFunctions;
+import riot.riotapi.utils.ConstantsExceptions;
 import riot.riotapi.utils.URIs;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -45,24 +50,55 @@ public class ImpSummonerApiService implements IntSummonerApiService {
   }
 
   @Override
-  public SummonerDTO getSummonerByName(String name) {
-    String url = URIs.URI_SUMMONER_ACCOUNT_NAME + name + getApiKeyURLFormat();
+  public List<SummonerDTO> getSummonerByName(String name) {
+    List<SummonerDTO> dtoList;
 
-    return getQueryParamResult(url, name);
+    try {
+      validateInput(name);
+      String url = URIs.URI_SUMMONER_ACCOUNT_NAME + name + getApiKeyURLFormat();
+      dtoList = new ArrayList<>(Collections.singletonList(getQueryParamResult(url, name)));
+    } catch (Exception ex) {
+      throw new ServiceException(ConstantsExceptions.ERROR_SEARCHING_SUMMONER.concat(name), ex);
+    }
+
+    return dtoList;
   }
 
   @Override
-  public SummonerDTO getSummonerByAccountId(String accountId) {
-    String url = URIs.URI_SUMMONER_ACCOUNT_ID + accountId + getApiKeyURLFormat();
+  public List<SummonerDTO> getSummonerByAccountId(String accountId) {
+    List<SummonerDTO> dtoList;
 
-    return getQueryParamResult(url, accountId);
+    try {
+      validateInput(accountId);
+      String url = URIs.URI_SUMMONER_ACCOUNT_ID + accountId + getApiKeyURLFormat();
+      dtoList = new ArrayList<>(Collections.singletonList(getQueryParamResult(url, accountId)));
+    } catch (Exception ex) {
+      throw new ServiceException(ConstantsExceptions.ERROR_SEARCHING_SUMMONER.concat(accountId), ex);
+    }
+
+    return dtoList;
   }
 
   @Override
-  public SummonerDTO getSummonerByPuuid(String puuid) {
-    String url = URIs.URI_SUMMONER_ACCOUNT_PUUID + puuid + getApiKeyURLFormat();
+  public List<SummonerDTO> getSummonerByPuuid(String puuid) {
 
-    return getQueryParamResult(url, puuid);
+    List<SummonerDTO> dtoList;
+
+    try {
+      validateInput(puuid);
+      String url = URIs.URI_SUMMONER_ACCOUNT_PUUID + puuid + getApiKeyURLFormat();
+      dtoList = new ArrayList<>(Collections.singletonList(getQueryParamResult(url, puuid)));
+    } catch (Exception ex) {
+      throw new ServiceException(ConstantsExceptions.ERROR_SEARCHING_SUMMONER.concat(puuid), ex);
+    }
+
+    return dtoList;
+  }
+
+  private void validateInput(String input) {
+    if (!CommonFunctions.isNotNullOrEmpty(input)) {
+      throw new ServiceException(ConstantsExceptions.ERROR_SEARCHING_SUMMONER.concat(input));
+    }
   }
 
 }

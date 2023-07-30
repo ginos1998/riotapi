@@ -7,9 +7,10 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import riot.riotapi.dtos.ChampionDTO;
 import riot.riotapi.dtos.ChampionDataDTO;
-import riot.riotapi.exceptions.ServiceFactoryException;
+import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.services.interfaces.IntChampionApiService;
 import org.junit.Before;
+import riot.riotapi.services.interfaces.IntChampionService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +23,8 @@ public class ChampionDelegatorTest {
 
   @Mock
   private IntChampionApiService intChampionApiService;
+  @Mock
+  private IntChampionService championServiceMock;
 
   @InjectMocks
   private ChampionDelegator championDelegator;
@@ -38,14 +41,14 @@ public class ChampionDelegatorTest {
     ChampionDataDTO givenDTO = this.createChampionDTO(true);
 
     // when
-    when(intChampionApiService.getChampionByName(champName))
+    when(championServiceMock.getChampionByName(champName))
         .thenReturn(givenDTO);
 
     // then
     ChampionDataDTO receivedDTO = this.championDelegator.getChampionByName(champName);
 
     assertEquals(receivedDTO, givenDTO);
-    verify(intChampionApiService, times(1)).getChampionByName(champName);
+    verify(championServiceMock, times(1)).getChampionByName(champName);
   }
 
   @Test
@@ -53,19 +56,19 @@ public class ChampionDelegatorTest {
     // given
     ChampionDataDTO givenDTO = createChampionDTO(true);
     // when
-    when(intChampionApiService.getAllChampions())
+    when(championServiceMock.getAllChampions())
         .thenReturn(givenDTO);
 
     // then
-    ChampionDataDTO receivedDTO = this.intChampionApiService.getAllChampions();
+    ChampionDataDTO receivedDTO = this.championDelegator.getAllChampions();
 
     assertEquals(receivedDTO, givenDTO);
-    verify(intChampionApiService, times(1)).getAllChampions();
+    verify(championServiceMock, times(1)).getAllChampions();
     assertFalse(receivedDTO.getData().isEmpty());
   }
 
   @Test
-  public void importAllChampions_PositiveTest() throws ServiceFactoryException {
+  public void importAllChampions_PositiveTest() throws ServiceException {
     // given
     String givenResponse = "OK";
 
