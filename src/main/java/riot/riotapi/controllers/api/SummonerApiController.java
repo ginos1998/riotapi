@@ -20,25 +20,13 @@ public class SummonerApiController {
     this.summonerDelegador = summonerDelegador;
   }
 
-  @GetMapping("/nombre/{name}")
-  public ResponseEntity<List<SummonerDTO>> getSummonerByName(@PathVariable String name,
-                                                             @RequestParam(required = false, defaultValue = "false") Boolean saveIfExists) {
+  @GetMapping()
+  public ResponseEntity<List<SummonerDTO>> getSummonerBy(@RequestParam(required = false) String name,
+                                                         @RequestParam(required = false) String accountId,
+                                                         @RequestParam(required = false) String puuid,
+                                                         @RequestParam(required = false, defaultValue = "false") Boolean saveIfExists) {
 
-    List<SummonerDTO> sum = this.summonerDelegador.getSummonerByName(name, saveIfExists);
-
-    if (CommonFunctions.isNotNullOrEmpty(sum)){
-      return ResponseEntity.ok(sum);
-    } else {
-      return ResponseEntity.noContent().build();
-    }
-
-  }
-
-  @GetMapping("/idCuenta/{accountId}")
-  public ResponseEntity<List<SummonerDTO>> getSummonerByAccountId(@PathVariable String accountId,
-                                                                  @RequestParam(required = false, defaultValue = "false") Boolean saveIfExists) {
-
-    List<SummonerDTO> sum = this.summonerDelegador.getSummonerByAccountId(accountId, saveIfExists);
+    List<SummonerDTO> sum = this.summonerDelegador.getSummonerBy(name, accountId, puuid, saveIfExists);
 
     if (CommonFunctions.isNotNullOrEmpty(sum)){
       return ResponseEntity.ok(sum);
@@ -46,19 +34,5 @@ public class SummonerApiController {
       return ResponseEntity.noContent().build();
     }
   }
-
-  @GetMapping("/puuid/{puuid}")
-  public ResponseEntity<List<SummonerDTO>> getSummonerByPuuid(@PathVariable String puuid,
-                                                              @RequestParam(required = false, defaultValue = "false") Boolean saveIfExists) {
-
-    List<SummonerDTO> sum = this.summonerDelegador.getSummonerByPuuid(puuid, saveIfExists);
-
-    if (CommonFunctions.isNotNullOrEmpty(sum)){
-      return ResponseEntity.ok(sum);
-    } else {
-      return ResponseEntity.noContent().build();
-    }
-  }
-
 
 }

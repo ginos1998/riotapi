@@ -11,6 +11,7 @@ import riot.riotapi.services.interfaces.IntSummonerService;
 import riot.riotapi.utils.CommonFunctions;
 import riot.riotapi.utils.ConstantsExceptions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,7 +28,7 @@ public class SummonerDelegador {
     this.mapper = new ModelMapper();
   }
 
-  public List<SummonerDTO> getSummonerByName(String name, boolean saveIfExists) {
+  private List<SummonerDTO> getSummonerByName(String name, boolean saveIfExists) {
     List<SummonerDTO> sumDTOList;
 
     try {
@@ -46,7 +47,7 @@ public class SummonerDelegador {
     return sumDTOList;
   }
 
-  public List<SummonerDTO> getSummonerByAccountId(String accountId, boolean saveIfExists) {
+  private List<SummonerDTO> getSummonerByAccountId(String accountId, boolean saveIfExists) {
     List<SummonerDTO> sum;
 
     try {
@@ -64,7 +65,7 @@ public class SummonerDelegador {
     return sum;
   }
 
-  public List<SummonerDTO> getSummonerByPuuid(String puuid, boolean saveIfExists) {
+  private List<SummonerDTO> getSummonerByPuuid(String puuid, boolean saveIfExists) {
     List<SummonerDTO> dtoList;
 
     try {
@@ -79,6 +80,22 @@ public class SummonerDelegador {
     } catch (Exception ex) {
       throw new ServiceException(ConstantsExceptions.ERROR_SEARCHING_SUMMONER.concat(puuid));
     }
+    return dtoList;
+  }
+
+  public List<SummonerDTO> getSummonerBy(String name, String accountId, String puuid, boolean saveIfExists) {
+    List<SummonerDTO> dtoList;
+
+    if (CommonFunctions.isNotNullOrEmpty(name)) {
+      dtoList = this.getSummonerByName(name, saveIfExists);
+    } else if (CommonFunctions.isNotNullOrEmpty(accountId)) {
+      dtoList = this.getSummonerByAccountId(accountId, saveIfExists);
+    } else if (CommonFunctions.isNotNullOrEmpty(puuid)) {
+      dtoList = this.getSummonerByPuuid(puuid, saveIfExists);
+    } else {
+      dtoList = new ArrayList<>();
+    }
+
     return dtoList;
   }
 }
