@@ -27,10 +27,6 @@ public class SummonerDelegador {
     this.mapper = new ModelMapper();
   }
 
-  public void saveSummoner(Summoner summoner) {
-    this.intSummonerService.saveSummoner(summoner);
-  }
-
   public List<SummonerDTO> getSummonerByName(String name, boolean saveIfExists) {
     List<SummonerDTO> sumDTOList;
 
@@ -68,7 +64,21 @@ public class SummonerDelegador {
     return sum;
   }
 
-  public SummonerDTO getSummonerByPuuid(String puuid) {
-    return this.intSummonerApiService.getSummonerByPuuid(puuid);
+  public List<SummonerDTO> getSummonerByPuuid(String puuid, boolean saveIfExists) {
+    List<SummonerDTO> dtoList;
+
+    try {
+      dtoList = intSummonerService.getSummonerByPuuid(puuid);
+
+      if(!CommonFunctions.isNotNullOrEmpty(dtoList)){
+        dtoList = this.intSummonerApiService.getSummonerByPuuid(puuid);
+        if(CommonFunctions.isNotNullOrEmpty(dtoList) && saveIfExists) {
+          this.intSummonerService.saveSummoner(mapper.map(dtoList.get(0), Summoner.class));
+        }
+      }
+    } catch (Exception ex) {
+      throw new ServiceException(ConstantsExceptions.ERROR_SEARCHING_SUMMONER.concat(puuid));
+    }
+    return dtoList;
   }
 }

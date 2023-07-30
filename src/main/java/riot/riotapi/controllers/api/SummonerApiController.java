@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import riot.riotapi.delegators.SummonerDelegador;
 import riot.riotapi.dtos.SummonerDTO;
-import riot.riotapi.dtos.mappers.imp.SummonerMapper;
 import riot.riotapi.utils.CommonFunctions;
 
 import java.util.List;
@@ -49,16 +48,15 @@ public class SummonerApiController {
   }
 
   @GetMapping("/puuid/{puuid}")
-  public SummonerDTO getSummonerByPuuid(@PathVariable String puuid) {
-    SummonerDTO sum = this.summonerDelegador.getSummonerByPuuid(puuid);
-    saveSummoner(sum);
-    return sum;
-  }
+  public ResponseEntity<List<SummonerDTO>> getSummonerByPuuid(@PathVariable String puuid,
+                                                              @RequestParam(required = false, defaultValue = "false") Boolean saveIfExists) {
 
-  private void saveSummoner(SummonerDTO sum) {
-    if (sum != null) {
-      SummonerMapper mapper = new SummonerMapper();
-      this.summonerDelegador.saveSummoner(mapper.toSummoner(sum));
+    List<SummonerDTO> sum = this.summonerDelegador.getSummonerByPuuid(puuid, saveIfExists);
+
+    if (CommonFunctions.isNotNullOrEmpty(sum)){
+      return ResponseEntity.ok(sum);
+    } else {
+      return ResponseEntity.noContent().build();
     }
   }
 

@@ -52,11 +52,10 @@ public class ImpSummonerService implements IntSummonerService {
   @Override
   public List<SummonerDTO> getSummonerByAccountId(String accountId) {
 
-    validateInput(accountId);
-
     List<SummonerDTO> sumDtoList;
 
     try {
+      validateInput(accountId);
       String id = "%".concat(accountId).concat("%");
       sumDtoList = intPersistenceSummoner.getSummonerByAccountId(id)
           .stream()
@@ -64,6 +63,24 @@ public class ImpSummonerService implements IntSummonerService {
           .toList();
     } catch (Exception ex) {
       throw new ServiceException(ConstantsExceptions.ERROR_SEARCHING_SUMMONER.concat(accountId));
+    }
+
+    return sumDtoList;
+  }
+
+  @Override
+  public List<SummonerDTO> getSummonerByPuuid(String puuid) {
+    List<SummonerDTO> sumDtoList;
+
+    try {
+      validateInput(puuid);
+      String id = "%".concat(puuid).concat("%");
+      sumDtoList = intPersistenceSummoner.getSummonerByPuuid(id)
+          .stream()
+          .map(s -> mapper.map(s, SummonerDTO.class))
+          .toList();
+    } catch (Exception ex) {
+      throw new ServiceException(ConstantsExceptions.ERROR_SEARCHING_SUMMONER.concat(puuid));
     }
 
     return sumDtoList;

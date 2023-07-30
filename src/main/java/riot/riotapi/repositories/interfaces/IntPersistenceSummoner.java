@@ -16,4 +16,8 @@ public interface IntPersistenceSummoner extends GenericRepository<Summoner, Stri
   @Query(value = " SELECT s.* FROM summoner AS s WHERE s.account_id ilike :accountId ",
       nativeQuery = true)
   List<Summoner> getSummonerByAccountId(String accountId);
+
+  @Query(value = " SELECT s.* FROM summoner AS s WHERE s.puuid ilike :puuid ",
+      nativeQuery = true)
+  List<Summoner> getSummonerByPuuid(String puuid);
 }

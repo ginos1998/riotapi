@@ -80,10 +80,19 @@ public class ImpSummonerApiService implements IntSummonerApiService {
   }
 
   @Override
-  public SummonerDTO getSummonerByPuuid(String puuid) {
-    String url = URIs.URI_SUMMONER_ACCOUNT_PUUID + puuid + getApiKeyURLFormat();
+  public List<SummonerDTO> getSummonerByPuuid(String puuid) {
 
-    return getQueryParamResult(url, puuid);
+    List<SummonerDTO> dtoList;
+
+    try {
+      validateInput(puuid);
+      String url = URIs.URI_SUMMONER_ACCOUNT_PUUID + puuid + getApiKeyURLFormat();
+      dtoList = new ArrayList<>(Collections.singletonList(getQueryParamResult(url, puuid)));
+    } catch (Exception ex) {
+      throw new ServiceException(ConstantsExceptions.ERROR_SEARCHING_SUMMONER.concat(puuid), ex);
+    }
+
+    return dtoList;
   }
 
   private void validateInput(String input) {

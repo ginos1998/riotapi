@@ -10,4 +10,5 @@ public interface IntSummonerService {
 
   List<SummonerDTO> getSummonerByName(String name);
   List<SummonerDTO> getSummonerByAccountId(String accountId);
+  List<SummonerDTO> getSummonerByPuuid(String puuid);
 }
