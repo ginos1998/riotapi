@@ -44,4 +44,13 @@ Hecho ésto, tenemos tres endpoints:
 ## Base de Datos
 
 El proyecto tiene conexión a una instancia de base de datos en AWS. Sin embargo, la 
-puerta de enlace a la misma no está publicada en éste repositorio.
+puerta de enlace a la misma no está publicada en este repositorio. 
+Para agregar las variables de entorno en el localhost,
+
+DB_HOST= ;
+DB_NAME= ;
+DB_USER= ;
+DB_PSW= 
+
+De todas formas, más allá de no tener estos datos, uno puede obtener la información solicitada en cada endpoint, 
+ya que si lo buscado no está en la bd, se hace una petición a la respectiva api.
