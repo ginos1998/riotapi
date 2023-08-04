@@ -43,11 +43,5 @@ Hecho ésto, tenemos tres endpoints:
 
 ## Base de Datos
 
-Los datos de invocadores y campeones se guardan en las siguientes tablas, que se encuentran en la carpeta [databse](https://github.com/ginos1998/riotapi/tree/main/src/main/database/versions):
-
-- summoner
-- riot_api
-- champ_data
-  - champion
-    - info
-    - stats
+El proyecto tiene conexión a una instancia de base de datos en AWS. Sin embargo, la 
+puerta de enlace a la misma no está publicada en éste repositorio.
