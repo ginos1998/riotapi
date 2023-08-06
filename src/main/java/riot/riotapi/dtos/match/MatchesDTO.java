@@ -1,14 +1,12 @@
 package riot.riotapi.dtos.match;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.ArrayList;
-
 @Data
+@AllArgsConstructor
 public class MatchesDTO {
-  @JsonProperty("matchesList")
-  private ArrayList<String> matchesList;
+  private String[] matchesList;
   private String puuid;
   private String summonerName;
 }
