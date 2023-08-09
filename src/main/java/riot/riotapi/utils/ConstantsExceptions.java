@@ -13,5 +13,6 @@ public class ConstantsExceptions {
   public static final String ERROR_SEARCHING_CHAMPIONS = "Ha ocurrido un error buscando todos los campeones.";
   public static final String ERROR_BAD_INPUT_SUM_NAME = "Para buscar un invocador, la entrada no puede ser null o vacia";
   public static final String ERROR_RIOT_API_KEY_NOT_FOUNT = "Error al buscar la api key de Riot Games.";
-  public static final String ERROR_GETTING_SUMMONER_MATCHES = "Error al obtener partidas del jugador con el puuid %s";
+  public static final String ERROR_GETTING_SUMMONER_MATCHES_BY_PUUID = "Error al obtener partidas del jugador con el puuid %s";
+  public static final String ERROR_GETTING_SUMMONER_MATCHES_BY_NAME = "Error al obtener partidas del jugador con el nombre %s";
 }

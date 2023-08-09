@@ -2,8 +2,12 @@ package riot.riotapi.utils;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -78,5 +82,14 @@ public class CommonFunctions {
 
   public static boolean isNotNullAndPositive(Integer num) {
     return num != null && num > 0;
+  }
+
+  public static Long convertToUnixTimestamp(Date date) {
+    return date.toInstant().getEpochSecond();
+  }
+
+  public static boolean isNullOrBadFormat(Date date) {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    return sdf.format(date).equals(date.toString());
   }
 }

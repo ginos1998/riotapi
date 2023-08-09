@@ -1,8 +1,9 @@
 package riot.riotapi.services.interfaces;
 
 import riot.riotapi.dtos.match.MatchesDTO;
+import riot.riotapi.entities.Summoner;
 import riot.riotapi.filters.MatchFilter;
 
 public interface IntMatchApiService {
-  MatchesDTO getSummonerMatchesByPuuid(MatchFilter filter);
+  MatchesDTO getSummonerMatchesByPuuid(Summoner summoner, MatchFilter filter);
 }

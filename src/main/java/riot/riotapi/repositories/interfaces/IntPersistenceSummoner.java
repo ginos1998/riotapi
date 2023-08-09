@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 import riot.riotapi.entities.Summoner;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface IntPersistenceSummoner extends GenericRepository<Summoner, String> {
@@ -20,4 +21,6 @@ public interface IntPersistenceSummoner extends GenericRepository<Summoner, Stri
   @Query(value = " SELECT s.* FROM summoner AS s WHERE s.puuid ilike :puuid ",
       nativeQuery = true)
   List<Summoner> getSummonerByPuuid(String puuid);
+
+  Optional<Summoner> findByNameContainingIgnoreCase(String name);
 }

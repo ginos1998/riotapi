@@ -4,6 +4,7 @@ import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.entities.Summoner;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IntSummonerService {
   void saveSummoner(Summoner summoner);
@@ -11,4 +12,6 @@ public interface IntSummonerService {
   List<SummonerDTO> getSummonerByName(String name);
   List<SummonerDTO> getSummonerByAccountId(String accountId);
   List<SummonerDTO> getSummonerByPuuid(String puuid);
+
+  Optional<Summoner> findByNameContainingIgnoreCase(String name);
 }

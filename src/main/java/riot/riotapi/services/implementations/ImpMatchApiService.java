@@ -9,7 +9,6 @@ import riot.riotapi.entities.RiotApi;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.filters.MatchFilter;
-import riot.riotapi.repositories.interfaces.IntPersistenceSummoner;
 import riot.riotapi.repositories.interfaces.IntRiotApi;
 import riot.riotapi.services.interfaces.IntMatchApiService;
 import riot.riotapi.utils.CommonFunctions;
@@ -18,25 +17,21 @@ import riot.riotapi.utils.ConstantsExceptions;
 import riot.riotapi.utils.URIs;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @Service
 public class ImpMatchApiService implements IntMatchApiService {
-
-  private final IntPersistenceSummoner persistenceSummoner;
   private final IntRiotApi intRiotApi;
   private WebClient webClient;
   private String apiKey;
   @Autowired
-  public ImpMatchApiService(IntRiotApi intRiotApi, IntPersistenceSummoner persistenceSummoner) {
+  public ImpMatchApiService(IntRiotApi intRiotApi) {
     this.intRiotApi = intRiotApi;
-    this.persistenceSummoner = persistenceSummoner;
   }
 
   @Override
-  public MatchesDTO getSummonerMatchesByPuuid(MatchFilter filter) {
+  public MatchesDTO getSummonerMatchesByPuuid(Summoner summoner, MatchFilter filter) {
     try {
       if (!CommonFunctions.isNotNullOrEmpty(apiKey)) {
         initApiKey();
@@ -45,17 +40,15 @@ public class ImpMatchApiService implements IntMatchApiService {
       validatesFilter(filter);
 
       String[] matchesList = webClient.get()
-          .uri(buildDynamicURL(filter))
+          .uri(buildDynamicURL(summoner.getPuuid(), filter))
           .header("X-Riot-Token", this.apiKey)
           .retrieve()
           .bodyToMono(String[].class).block();
 
-      List<Summoner> sum = persistenceSummoner.getSummonerByPuuid(filter.getPuuid());
-      String sumName = CommonFunctions.hasUniqueValue(sum) ? sum.get(0).getName() : "";
-      return new MatchesDTO(matchesList, filter.getPuuid(), sumName);
+      return new MatchesDTO(matchesList, summoner.getPuuid(), summoner.getName());
 
     } catch (WebClientResponseException ex) {
-      throw new ServiceException(String.format(ConstantsExceptions.ERROR_GETTING_SUMMONER_MATCHES, filter.getPuuid()), ex);
+      throw new ServiceException(String.format(ConstantsExceptions.ERROR_GETTING_SUMMONER_MATCHES_BY_PUUID, summoner.getPuuid()), ex);
     }
 
   }
@@ -69,10 +62,10 @@ public class ImpMatchApiService implements IntMatchApiService {
     }
   }
 
-  public String buildDynamicURL(MatchFilter filter) {
+  public String buildDynamicURL(String puuid, MatchFilter filter) {
     Map<String, String> queryParams = new LinkedHashMap<>();
 
-    String uri = URIs.URI_LOL_MATCHES_BY_PUUID.replace("#", filter.getPuuid());
+    String uri = URIs.URI_LOL_MATCHES_BY_PUUID.replace("#", puuid);
 
     if (filter.getStartTime() != null) {
       queryParams.put("startTime", filter.getStartTime().toString());
@@ -107,10 +100,6 @@ public class ImpMatchApiService implements IntMatchApiService {
 
     if (filter.getEndTime() - filter.getStartTime() < 0) {
       throw new ServiceException("El valor de endTime debe ser mayor al valor de startTime.");
-    }
-
-    if (!CommonFunctions.isNotNullOrEmpty(filter.getPuuid())) {
-      throw new ServiceException("El valor de puuid no puede ser null o vacío.");
     }
 
     if (CommonFunctions.isNullOrNegative(filter.getStart())) {

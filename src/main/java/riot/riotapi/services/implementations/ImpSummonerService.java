@@ -12,6 +12,7 @@ import riot.riotapi.utils.CommonFunctions;
 import riot.riotapi.utils.ConstantsExceptions;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ImpSummonerService implements IntSummonerService {
@@ -84,6 +85,11 @@ public class ImpSummonerService implements IntSummonerService {
     }
 
     return sumDtoList;
+  }
+
+  @Override
+  public Optional<Summoner> findByNameContainingIgnoreCase(String name) {
+    return intPersistenceSummoner.findByNameContainingIgnoreCase(name);
   }
 
   private void validateInput(String input) {
