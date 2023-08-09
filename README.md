@@ -2,10 +2,9 @@
 
 ## Introduccion
 
-Este proyecto está hecho principalmente con Spring Boot v3.1.1, postgreSQL y JPA repository. 
+Este proyecto consta de una API REST y está hecho principalmente con Spring Boot v3.1.1, postgreSQL y JPA repository. 
 El mismo proporciona endpoints que facilitan la conexion con la API de Riot Games para obtener
-estadisticas de invocadores, partidas, campeones, etc. Mas adelante se detallará que endpoints consumen 
-y almacenan los datos en la base de datos. 
+estadisticas de invocadores, partidas, campeones, etc.
 
 ## Endpoints
 
@@ -23,16 +22,17 @@ y tiene tres endpoints:
    3. [POST] /importar/todos : importa todos los campeones y los almacena en la base de datos, con sus propiedades. Retorna 'OK' si todo salió bien.
 
 En 2, se consume la API de Riot Games. Para ello, debemos tener una cuenta y logearnos en la [página para desarrolladores](https://developer.riotgames.com/). 
-Una vez logeados, podemos generar la apikey (que vence en 24 hs) y cambiarla por base de datos:
+Una vez logeados, podemos generar la apikey (que vence cada 24 hs) y cambiarla en la base de datos:
 
     -- si es por primera vez, insertamos datos
     INSERT INTO public.riot_api (id_riot_api, username, password, api_key, last_update)
-    VALUES ('TU USERNAME', 'TU PSW', 'TU API KEY', 'FECHA GEN API KEY');
+    VALUES ('TU USERNAME', 'TU PSW', 'TU API KEY', current_date);
 
     -- update api key
     UPDATE public.riot_api
     SET api_key = 'NUEVA API KEY',
-        last_update = 'FECHA UPDATE' WHERE id_riot_api = 1;
+        last_update = current_date 
+    WHERE id_riot_api = 1;
 
 Hecho ésto, tenemos tres endpoints:
 
