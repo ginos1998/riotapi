@@ -7,9 +7,9 @@ public class MatchFilter {
   private String puuid;
   private Long startTime;
   private Long endTime;
-  private int queue;
+  private Integer queue;
   private String type;
-  private int start;
-  private int count;
+  private Integer start;
+  private Integer count;
   private boolean save;
 }

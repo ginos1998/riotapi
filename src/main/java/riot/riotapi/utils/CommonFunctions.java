@@ -2,6 +2,8 @@ package riot.riotapi.utils;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -51,5 +53,30 @@ public class CommonFunctions {
 
   public static boolean hasUniqueValue(List list) {
     return isNotNullOrEmpty(list) && list.size() == 1;
+  }
+
+  public static Long getCurrentTimeEpochSeconds() {
+    return Instant.now().getEpochSecond();
+  }
+  /**
+   * Le resta a la fecha actual la cantidad de días dados.
+   * @param days días a restar.
+   * @return fecha en segundos en formato Epoch.
+   */
+  public static Long substractDaysToCurrentDate(int days) {
+    Instant now = Instant.now();
+    return now.minus(days, ChronoUnit.DAYS).getEpochSecond();
+  }
+
+  public static boolean isNullOrNegative(Integer num) {
+    return num == null || num < 0;
+  }
+
+  public static boolean isNullOrNegative(Long num) {
+    return num == null || num < 0;
+  }
+
+  public static boolean isNotNullAndPositive(Integer num) {
+    return num != null && num > 0;
   }
 }

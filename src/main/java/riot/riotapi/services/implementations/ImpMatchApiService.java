@@ -13,6 +13,7 @@ import riot.riotapi.repositories.interfaces.IntPersistenceSummoner;
 import riot.riotapi.repositories.interfaces.IntRiotApi;
 import riot.riotapi.services.interfaces.IntMatchApiService;
 import riot.riotapi.utils.CommonFunctions;
+import riot.riotapi.utils.Constants;
 import riot.riotapi.utils.ConstantsExceptions;
 import riot.riotapi.utils.URIs;
 
@@ -41,6 +42,8 @@ public class ImpMatchApiService implements IntMatchApiService {
         initApiKey();
       }
 
+      validatesFilter(filter);
+
       String[] matchesList = webClient.get()
           .uri(buildDynamicURL(filter))
           .header("X-Riot-Token", this.apiKey)
@@ -52,7 +55,7 @@ public class ImpMatchApiService implements IntMatchApiService {
       return new MatchesDTO(matchesList, filter.getPuuid(), sumName);
 
     } catch (WebClientResponseException ex) {
-      throw new ServiceException("Error al obtener partidas del jugador.", ex);
+      throw new ServiceException(String.format(ConstantsExceptions.ERROR_GETTING_SUMMONER_MATCHES, filter.getPuuid()), ex);
     }
 
   }
@@ -77,7 +80,7 @@ public class ImpMatchApiService implements IntMatchApiService {
     if (filter.getEndTime() != null) {
       queryParams.put("endTime", filter.getEndTime().toString());
     }
-    if (filter.getQueue() > 0) {
+    if (CommonFunctions.isNotNullAndPositive(filter.getQueue())) {
       queryParams.put("queue", Integer.toString(filter.getQueue()));
     }
     if (CommonFunctions.isNotNullOrEmpty(filter.getType())) {
@@ -93,4 +96,42 @@ public class ImpMatchApiService implements IntMatchApiService {
     return CommonFunctions.buildURIWithQueryParams(uri, queryParams);
   }
 
+  private void validatesFilter(MatchFilter filter) {
+    if(CommonFunctions.isNullOrNegative(filter.getStartTime())) {
+      filter.setStartTime(CommonFunctions.substractDaysToCurrentDate(5));
+    }
+
+    if(CommonFunctions.isNullOrNegative(filter.getEndTime())) {
+      filter.setEndTime(CommonFunctions.getCurrentTimeEpochSeconds());
+    }
+
+    if (filter.getEndTime() - filter.getStartTime() < 0) {
+      throw new ServiceException("El valor de endTime debe ser mayor al valor de startTime.");
+    }
+
+    if (!CommonFunctions.isNotNullOrEmpty(filter.getPuuid())) {
+      throw new ServiceException("El valor de puuid no puede ser null o vacío.");
+    }
+
+    if (CommonFunctions.isNullOrNegative(filter.getStart())) {
+      filter.setStart(0);
+    }
+
+    if (filter.getCount() == null) {
+      filter.setCount(filter.getStart() < 10 ? 10 : filter.getStart() + 1);
+    }
+
+    if (filter.getCount() <= filter.getStart()) {
+      throw new ServiceException("El valor de count debe ser mayor al valor de start.");
+    }
+
+    if (filter.getCount() > 100) {
+      throw new ServiceException("El valor de count debe ser menor a 100.");
+    }
+
+    if (CommonFunctions.isNotNullOrEmpty(filter.getType())
+            && !Constants.LIST_TYPE_OF_MATCHES.contains(filter.getType())) {
+      throw new ServiceException(String.format("El type %s no está permitido", filter.getType()));
+    }
+  }
 }
