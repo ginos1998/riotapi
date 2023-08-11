@@ -1,10 +1,11 @@
 package riot.riotapi.services.implementations;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import riot.riotapi.dtos.match.MatchesDTO;
+import riot.riotapi.dtos.match.*;
 import riot.riotapi.entities.RiotApi;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
@@ -16,18 +17,18 @@ import riot.riotapi.utils.Constants;
 import riot.riotapi.utils.ConstantsExceptions;
 import riot.riotapi.utils.URIs;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ImpMatchApiService implements IntMatchApiService {
   private final IntRiotApi intRiotApi;
   private WebClient webClient;
   private String apiKey;
+  private final ModelMapper mapper;
   @Autowired
   public ImpMatchApiService(IntRiotApi intRiotApi) {
     this.intRiotApi = intRiotApi;
+    this.mapper = new ModelMapper();
   }
 
   @Override
@@ -51,6 +52,52 @@ public class ImpMatchApiService implements IntMatchApiService {
       throw new ServiceException(String.format(ConstantsExceptions.ERROR_GETTING_SUMMONER_MATCHES_BY_PUUID, summoner.getPuuid()), ex);
     }
 
+  }
+
+  @Override
+  public MatchDTO getMatchById(String matchId) {
+    MatchDTO matchDTO;
+    try {
+      if (!CommonFunctions.isNotNullOrEmpty(matchId)) {
+        throw new ServiceException("El valor de matchId no puede ser null o vacío.");
+      }
+
+      if (!CommonFunctions.isNotNullOrEmpty(apiKey)) {
+        initApiKey();
+      }
+
+      MatchRootDTO root = webClient.get()
+              .uri(URIs.URI_LOL_MATCHES_BY_MATCH_ID.concat(matchId))
+              .header("X-Riot-Token", this.apiKey)
+              .retrieve()
+              .bodyToMono(MatchRootDTO.class)
+              .block();
+
+
+      if (root == null || root.getInfo() == null) {
+        throw new ServiceException("Ha ocurrido un error al obtener la partida con matchId: ".concat(matchId));
+      }
+
+      matchDTO = new MatchDTO();
+      matchDTO.setMode(root.getInfo().getMode());
+      matchDTO.setGameVersion(root.getInfo().getVersion());
+      matchDTO.setStartTime(CommonFunctions.getDateAsString(root.getInfo().getStartTime()));
+      matchDTO.setEndTime(CommonFunctions.getDateAsString(root.getInfo().getEndTime()));
+      matchDTO.setDuration(CommonFunctions.getDurationMMssAsString(root.getInfo().getDuration()));
+      matchDTO.setCreation(CommonFunctions.getDateAsString(root.getInfo().getCreation()));
+      matchDTO.setParticipants(getListParticipantsInfo(root.getInfo().getParticipants()));
+    } catch (Exception ex) {
+      throw new ServiceException("Ha ocurrido un error inesperado al buscar la partida solicitada.\n".concat(ex.getMessage()));
+    }
+
+
+    return matchDTO;
+  }
+
+  private List<ParticipantInfoDTO> getListParticipantsInfo(ArrayList<ParticipantDTO> participants) {
+    return participants.stream()
+            .map(participant -> mapper.map(participant, ParticipantInfoDTO.class))
+            .toList();
   }
 
   private void initApiKey() {

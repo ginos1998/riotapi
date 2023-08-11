@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import riot.riotapi.delegators.MatchDelegator;
+import riot.riotapi.dtos.match.MatchDTO;
 import riot.riotapi.dtos.match.MatchesDTO;
 import riot.riotapi.filters.MatchFilter;
 
@@ -64,4 +65,25 @@ public class MatchApiController {
       return ResponseEntity.noContent().build();
     }
   }
+
+  @GetMapping("/by-matchId/{matchId}")
+  @ApiOperation(value = "Obtiene datos de una partida.", response = MatchesDTO.class, responseContainer = "dto", produces = "application/json")
+  @ApiResponses(value = {
+          @ApiResponse(code = 200, message = "Devuelve un dto con datos de una partida."),
+          @ApiResponse(code = 204, message = "No existe partida para el matchId dado."),
+          @ApiResponse(code = 409, message = "Error al obtener la partida."),
+          @ApiResponse(code = 404, message = "Not found."),
+          @ApiResponse(code = 500, message = "Ha ocurrido un error inesperado.")
+
+  })
+  public ResponseEntity<MatchDTO> getMatchById(@PathVariable String matchId, @RequestParam(required = false, defaultValue = "false") Boolean saveData) {
+    MatchDTO sumMatchesDTO = matchDelegator.getMatchById(matchId, saveData);
+
+    if (sumMatchesDTO != null) {
+      return ResponseEntity.ok(sumMatchesDTO);
+    } else {
+      return ResponseEntity.noContent().build();
+    }
+  }
+
 }

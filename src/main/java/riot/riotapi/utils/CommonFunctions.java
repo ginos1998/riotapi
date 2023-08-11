@@ -2,6 +2,7 @@ package riot.riotapi.utils;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -91,5 +92,17 @@ public class CommonFunctions {
   public static boolean isNullOrBadFormat(Date date) {
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     return sdf.format(date).equals(date.toString());
+  }
+
+  public static String getDateAsString(Long unixTimestamp) {
+    Date date = new Date(unixTimestamp);
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    return dateFormat.format(date);
+  }
+
+  public static String getDurationMMssAsString(Integer unixTimestamp) {
+    Date date = new Date(unixTimestamp);
+    SimpleDateFormat dateFormat = new SimpleDateFormat("mm:ss");
+    return dateFormat.format(date);
   }
 }

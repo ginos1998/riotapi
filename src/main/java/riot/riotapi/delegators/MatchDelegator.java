@@ -3,6 +3,7 @@ package riot.riotapi.delegators;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import riot.riotapi.dtos.match.MatchDTO;
 import riot.riotapi.dtos.match.MatchesDTO;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
@@ -32,6 +33,21 @@ public class MatchDelegator {
 
   public MatchesDTO getMatchesBySummonerName(String sumName, MatchFilter filter) {
     return matchApiService.getSummonerMatchesByPuuid(findSummoner(sumName, null), filter);
+  }
+
+  public MatchDTO getMatchById(String matchId, Boolean saveData) {
+    MatchDTO matchesDTO;
+    try {
+      matchesDTO = matchApiService.getMatchById(matchId);
+      if (saveData) {
+        // TODO algo xd
+      }
+    } catch (Exception ex) {
+      throw new ServiceException("Ha ocurrido un error inesperado al buscar la partida solicitada.\n".concat(ex.getMessage()));
+    }
+
+
+    return matchesDTO;
   }
 
   private Summoner findSummoner(String name, String puuid) {
