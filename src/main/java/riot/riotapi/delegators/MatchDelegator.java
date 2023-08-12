@@ -3,27 +3,30 @@ package riot.riotapi.delegators;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import riot.riotapi.dtos.match.MatchDTO;
-import riot.riotapi.dtos.match.MatchesDTO;
+import riot.riotapi.dtos.match.*;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.filters.MatchFilter;
 import riot.riotapi.services.interfaces.IntMatchApiService;
+import riot.riotapi.services.interfaces.IntMatchService;
 import riot.riotapi.utils.CommonFunctions;
 import riot.riotapi.utils.ConstantsExceptions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class MatchDelegator {
   private final IntMatchApiService matchApiService;
+  private final IntMatchService matchService;
   private final SummonerDelegador summonerDelegador;
   private final ModelMapper mapper;
 
   @Autowired
-  public MatchDelegator(IntMatchApiService matchApiService, SummonerDelegador summonerDelegador) {
+  public MatchDelegator(IntMatchApiService matchApiService, IntMatchService matchService, SummonerDelegador summonerDelegador) {
     this.matchApiService = matchApiService;
     this.summonerDelegador = summonerDelegador;
+    this.matchService = matchService;
     this.mapper = new ModelMapper();
   }
 
@@ -36,18 +39,46 @@ public class MatchDelegator {
   }
 
   public MatchDTO getMatchById(String matchId, Boolean saveData) {
-    MatchDTO matchesDTO;
+    MatchDTO matchDTO;
     try {
-      matchesDTO = matchApiService.getMatchById(matchId);
+      MatchRootDTO rootDTO = matchApiService.getMatchById(matchId);
+      matchDTO = createsMatchDto(rootDTO.getInfo());
+
       if (saveData) {
-        // TODO algo xd
+        this.matchService.saveMatch(rootDTO.getInfo());
+
+        this.summonerDelegador.saveSummoners(rootDTO.getInfo().getParticipants());
+
+        this.summonerDelegador.saveSummonerMatch(rootDTO.getInfo().getMatchId(), rootDTO.getMetadata().getParticipants());
+
       }
     } catch (Exception ex) {
       throw new ServiceException("Ha ocurrido un error inesperado al buscar la partida solicitada.\n".concat(ex.getMessage()));
     }
 
 
-    return matchesDTO;
+    return matchDTO;
+  }
+
+  private MatchDTO createsMatchDto(MatchInfoDTO infoDTO) {
+    if (infoDTO == null) {
+      throw new ServiceException("Ha ocurrido un error inesperado al obtener los datos de la partida.");
+    }
+    MatchDTO matchDTO = new MatchDTO();
+    matchDTO.setMode(infoDTO.getMode());
+    matchDTO.setGameVersion(infoDTO.getVersion());
+    matchDTO.setStartTime(CommonFunctions.getDateAsString(infoDTO.getStartTime()));
+    matchDTO.setEndTime(CommonFunctions.getDateAsString(infoDTO.getEndTime()));
+    matchDTO.setDuration(CommonFunctions.getDurationMMssAsString(infoDTO.getDuration()));
+    matchDTO.setCreation(CommonFunctions.getDateAsString(infoDTO.getCreation()));
+    matchDTO.setParticipants(getListParticipantsInfo(infoDTO.getParticipants()));
+
+    return matchDTO;
+  }
+  private List<ParticipantInfoDTO> getListParticipantsInfo(ArrayList<ParticipantDTO> participants) {
+    return participants.stream()
+            .map(participant -> mapper.map(participant, ParticipantInfoDTO.class))
+            .toList();
   }
 
   private Summoner findSummoner(String name, String puuid) {

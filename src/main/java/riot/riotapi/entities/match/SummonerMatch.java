@@ -21,4 +21,9 @@ public class SummonerMatch {
     @OneToOne
     @JoinColumn(name = "key")
     private Summoner summoner;
+
+    public SummonerMatch(Match match, Summoner summoner) {
+        this.match = match;
+        this.summoner = summoner;
+    }
 }

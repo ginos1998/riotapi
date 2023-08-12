@@ -12,7 +12,7 @@ import java.util.ArrayList;
 @AllArgsConstructor
 public class MatchInfoDTO {
     @JsonProperty("gameId")
-    private Integer matchId;
+    private Long matchId;
     @JsonProperty("gameCreation")
     private Long creation;
     @JsonProperty("gameDuration")
@@ -31,7 +31,7 @@ public class MatchInfoDTO {
     private String version;
     @JsonProperty("mapId")
     private Integer mapId;
-    public ArrayList<ParticipantDTO> participants;
+    private ArrayList<ParticipantDTO> participants;
     private String platformId;
     private Integer queueId;
     private ArrayList<TeamDTO> teams;

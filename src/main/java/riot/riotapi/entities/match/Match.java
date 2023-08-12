@@ -31,4 +31,8 @@ public class Match {
     private String version;
     @Column(name = "map_id")
     private Integer mapId;
+
+    public Match(Long matchId) {
+        this.matchId = matchId;
+    }
 }

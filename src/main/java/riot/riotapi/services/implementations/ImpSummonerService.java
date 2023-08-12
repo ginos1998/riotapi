@@ -5,8 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.entities.Summoner;
+import riot.riotapi.entities.match.Match;
+import riot.riotapi.entities.match.SummonerMatch;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.repositories.interfaces.IntPersistenceSummoner;
+import riot.riotapi.repositories.interfaces.IntPersistenceSummonerMatch;
 import riot.riotapi.services.interfaces.IntSummonerService;
 import riot.riotapi.utils.CommonFunctions;
 import riot.riotapi.utils.ConstantsExceptions;
@@ -18,10 +21,12 @@ import java.util.Optional;
 public class ImpSummonerService implements IntSummonerService {
 
   private final IntPersistenceSummoner intPersistenceSummoner;
+  private final IntPersistenceSummonerMatch persistenceSummonerMatch;
   private final ModelMapper mapper;
   @Autowired
-  public ImpSummonerService(IntPersistenceSummoner intPersistenceSummoner) {
+  public ImpSummonerService(IntPersistenceSummoner intPersistenceSummoner, IntPersistenceSummonerMatch persistenceSummonerMatch) {
     this.intPersistenceSummoner = intPersistenceSummoner;
+    this.persistenceSummonerMatch = persistenceSummonerMatch;
     this.mapper = new ModelMapper();
   }
   @Override
@@ -90,6 +95,18 @@ public class ImpSummonerService implements IntSummonerService {
   @Override
   public Optional<Summoner> findByNameContainingIgnoreCase(String name) {
     return intPersistenceSummoner.findByNameContainingIgnoreCase(name);
+  }
+
+  @Override
+  public void saveSummonerMatch(Long matchId, List<String> listSummonerPuuid) {
+    if (CommonFunctions.isNotNullOrEmpty(listSummonerPuuid)) {
+      for (String puuid: listSummonerPuuid) {
+        Summoner summoner = intPersistenceSummoner.findSummonerByPuuid(puuid);
+        SummonerMatch summonerMatch = new SummonerMatch(new Match(matchId), summoner);
+        this.persistenceSummonerMatch.save(summonerMatch);
+      }
+
+    }
   }
 
   private void validateInput(String input) {

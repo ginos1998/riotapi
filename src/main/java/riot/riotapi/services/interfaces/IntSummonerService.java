@@ -14,4 +14,5 @@ public interface IntSummonerService {
   List<SummonerDTO> getSummonerByPuuid(String puuid);
 
   Optional<Summoner> findByNameContainingIgnoreCase(String name);
+  void saveSummonerMatch(Long matchId, List<String> listSummonerPuuid);
 }

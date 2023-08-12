@@ -1,6 +1,7 @@
 package riot.riotapi.repositories.interfaces;
 
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import riot.riotapi.entities.Summoner;
 
@@ -23,4 +24,6 @@ public interface IntPersistenceSummoner extends GenericRepository<Summoner, Stri
   List<Summoner> getSummonerByPuuid(String puuid);
 
   Optional<Summoner> findByNameContainingIgnoreCase(String name);
+
+  Summoner findSummonerByPuuid(@Param("puuid") String puuid);
 }

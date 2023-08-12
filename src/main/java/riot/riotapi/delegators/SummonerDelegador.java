@@ -4,6 +4,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import riot.riotapi.dtos.SummonerDTO;
+import riot.riotapi.dtos.match.ParticipantDTO;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
@@ -97,5 +98,23 @@ public class SummonerDelegador {
     }
 
     return dtoList;
+  }
+
+  public void saveSummoners(List<ParticipantDTO> participantDTOS) {
+    if (CommonFunctions.isNotNullOrEmpty(participantDTOS)) {
+      for (ParticipantDTO participant: participantDTOS) {
+        Summoner sum = new Summoner();
+        sum.setSummonerLevel(participant.getSummonerLevel());
+        sum.setId(participant.getSummonerId());
+        sum.setName(participant.getSummonerName());
+        sum.setPuuid(participant.getPuuid());
+        sum.setProfileIconId(participant.getProfileIcon());
+        this.intSummonerService.saveSummoner(sum);
+      }
+    }
+  }
+
+  public void saveSummonerMatch(Long matchId, List<String> listSummonerPuuid) {
+    this.intSummonerService.saveSummonerMatch(matchId, listSummonerPuuid);
   }
 }
