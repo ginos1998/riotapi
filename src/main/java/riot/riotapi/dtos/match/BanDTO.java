@@ -10,4 +10,6 @@ import lombok.NoArgsConstructor;
 public class BanDTO {
     private Integer first;
     private Integer pickTurn;
+    private Integer teamId;
+    private Integer championId;
 }

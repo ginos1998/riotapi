@@ -1,6 +1,7 @@
 package riot.riotapi.services.implementations;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -78,6 +79,36 @@ public class ImpMatchApiService implements IntMatchApiService {
     }
 
     return matchRootDTO;
+  }
+
+  @Override
+  public LiveMatchRootDTO getCurrentMatchInfo(String summonerId) {
+    LiveMatchRootDTO liveMatchDTO = null;
+
+    try{
+      if (!CommonFunctions.isNotNullOrEmpty(summonerId)) {
+        throw new ServiceException("El valor de summonerId no puede ser null o vacío.");
+      }
+
+      if (!CommonFunctions.isNotNullOrEmpty(apiKey)) {
+        initApiKey();
+      }
+
+      liveMatchDTO = webClient.get()
+              .uri(URIs.URI_LOL_LIVE_MATCH.concat(summonerId))
+              .header("X-Riot-Token", this.apiKey)
+              .retrieve()
+              .bodyToMono(LiveMatchRootDTO.class)
+              .block();
+
+    } catch (WebClientResponseException re) {
+      if (re.getStatusCode().isSameCodeAs(HttpStatusCode.valueOf(404))) {
+        throw new ServiceException("No se ha encontrado partida en juego.\n");
+      }
+    } catch (Exception ex) {
+      throw new ServiceException("Ha ocurrido un error inesperado al buscar la partida en juego solicitada.\n".concat(ex.getMessage()));
+    }
+    return liveMatchDTO;
   }
 
   private void initApiKey() {

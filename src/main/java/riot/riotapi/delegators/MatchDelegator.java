@@ -3,10 +3,12 @@ package riot.riotapi.delegators;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.match.*;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.filters.MatchFilter;
+import riot.riotapi.services.interfaces.IntChampionService;
 import riot.riotapi.services.interfaces.IntMatchApiService;
 import riot.riotapi.services.interfaces.IntMatchService;
 import riot.riotapi.utils.CommonFunctions;
@@ -19,13 +21,16 @@ import java.util.List;
 public class MatchDelegator {
   private final IntMatchApiService matchApiService;
   private final IntMatchService matchService;
+  private final IntChampionService championService;
   private final SummonerDelegador summonerDelegador;
   private final ModelMapper mapper;
 
   @Autowired
-  public MatchDelegator(IntMatchApiService matchApiService, IntMatchService matchService, SummonerDelegador summonerDelegador) {
+  public MatchDelegator(IntMatchApiService matchApiService, IntMatchService matchService, IntChampionService championService,
+                        SummonerDelegador summonerDelegador) {
     this.matchApiService = matchApiService;
     this.summonerDelegador = summonerDelegador;
+    this.championService = championService;
     this.matchService = matchService;
     this.mapper = new ModelMapper();
   }
@@ -61,6 +66,20 @@ public class MatchDelegator {
     return matchDTO;
   }
 
+  public MatchDTO getCurrentMatchInfo(String sumName) {
+    SummonerDTO sum = this.summonerDelegador.getSummonerBy(sumName, null, null, true)
+            .stream()
+            .findFirst()
+            .orElse(null);
+
+    MatchDTO matchDTO = null;
+    if (sum != null && sum.getSummonerId() != null) {
+      LiveMatchRootDTO liveMatchDTO = matchApiService.getCurrentMatchInfo(sum.getSummonerId());
+      matchDTO = createsMatchDto(liveMatchDTO);
+    }
+    return matchDTO;
+  }
+
   private MatchDTO findMatchIfExists(String matchId){
     String[] aux = matchId.split("_");
 
@@ -90,9 +109,28 @@ public class MatchDelegator {
 
     return matchDTO;
   }
+
+  private MatchDTO createsMatchDto(LiveMatchRootDTO liveMatchDTO) {
+    if (liveMatchDTO == null) {
+      throw new ServiceException("Ha ocurrido un error inesperado al obtener los datos de la partida en juego.");
+    }
+    MatchDTO matchDTO = new MatchDTO();
+    matchDTO.setMode(liveMatchDTO.getMode());
+    matchDTO.setStartTime(CommonFunctions.getDateAsString(liveMatchDTO.getStartTime()));
+    matchDTO.setDuration(CommonFunctions.getDurationMMssAsString(liveMatchDTO.getDuration()));
+    matchDTO.setParticipants(getListParticipantsInfo(liveMatchDTO.getParticipants()));
+
+    return matchDTO;
+  }
   private List<ParticipantInfoDTO> getListParticipantsInfo(ArrayList<ParticipantDTO> participants) {
     return participants.stream()
-            .map(participant -> mapper.map(participant, ParticipantInfoDTO.class))
+            .map(participant -> {
+              ParticipantInfoDTO p = mapper.map(participant, ParticipantInfoDTO.class);
+              if (participant.getChampionName() == null && participant.getChampionId() != null) {
+                p.setChampionName(this.championService.findByKey(participant.getChampionId()).getName());
+              }
+              return p;
+            })
             .toList();
   }
 

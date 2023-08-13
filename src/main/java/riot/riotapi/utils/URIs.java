@@ -15,5 +15,6 @@ public class URIs {
   public static final String URI_LOL_CHAMPION = "https://ddragon.leagueoflegends.com/cdn/13.13.1/data/en_US/champion/###.json";
   public static final String URI_LOL_MATCHES_BY_PUUID = "https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/#/ids";
   public static final String URI_LOL_MATCHES_BY_MATCH_ID = "https://americas.api.riotgames.com/lol/match/v5/matches/";
+  public static final String URI_LOL_LIVE_MATCH = "https://la2.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/";
 
 }

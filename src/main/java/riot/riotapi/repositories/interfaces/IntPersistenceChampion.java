@@ -13,4 +13,6 @@ public interface IntPersistenceChampion extends GenericRepository<Champion, Long
                   " WHERE champ.name ILIKE :name ",
         nativeQuery = true)
   List<Champion> getChampionByName(String name);
+
+  Champion findByKey(Long key);
 }

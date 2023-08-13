@@ -12,4 +12,7 @@ import java.util.ArrayList;
 public class PerksDTO {
     private StatPerksDTO statPerks;
     private ArrayList<StyleDTO> styles;
+    private ArrayList<Integer> perksId;
+    private Integer perkStyle;
+    private Integer perkSubStyle;
 }

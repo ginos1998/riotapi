@@ -11,6 +11,8 @@ public class ParticipantInfoDTO {
     private String lane;
     private Boolean win;
     private Integer teamId;
+    public Integer spell1Id;
+    public Integer spell2Id;
 
     public ParticipantInfoDTO(String summonerName, String championName, String lane, Boolean win, Integer teamId) {
         this.summonerName = summonerName;

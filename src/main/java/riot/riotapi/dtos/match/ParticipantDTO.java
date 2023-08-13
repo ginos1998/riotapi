@@ -138,4 +138,6 @@ public class ParticipantDTO {
     private Integer wardsKilled;
     private Integer wardsPlaced;
     private Boolean win;
+    public Integer spell1Id;
+    public Integer spell2Id;
 }

@@ -86,4 +86,24 @@ public class MatchApiController {
     }
   }
 
+  @GetMapping("/current-match/{sumName}")
+  @ApiOperation(value = "Obtiene datos de una partida.", response = MatchesDTO.class, responseContainer = "dto", produces = "application/json")
+  @ApiResponses(value = {
+          @ApiResponse(code = 200, message = "Devuelve un dto con datos de una partida."),
+          @ApiResponse(code = 204, message = "No existe partida para el matchId dado."),
+          @ApiResponse(code = 409, message = "Error al obtener la partida."),
+          @ApiResponse(code = 404, message = "Not found."),
+          @ApiResponse(code = 500, message = "Ha ocurrido un error inesperado.")
+
+  })
+  public ResponseEntity<MatchDTO> getCurrentMatchInfo(@PathVariable String sumName) {
+    MatchDTO matchDTO = matchDelegator.getCurrentMatchInfo(sumName);
+
+    if (matchDTO != null) {
+      return ResponseEntity.ok(matchDTO);
+    } else {
+      return ResponseEntity.noContent().build();
+    }
+  }
+
 }
