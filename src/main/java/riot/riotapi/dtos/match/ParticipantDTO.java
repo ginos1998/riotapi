@@ -18,7 +18,7 @@ public class ParticipantDTO {
     private ChallengesDTO challenges;
     private Integer champExperience;
     private Integer champLevel;
-    private Integer championId;
+    private Long championId;
     private String championName;
     private Integer championTransform;
     private Integer commandPings;

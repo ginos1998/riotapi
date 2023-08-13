@@ -2,11 +2,8 @@ package riot.riotapi.utils;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -104,5 +101,9 @@ public class CommonFunctions {
     Date date = new Date(unixTimestamp);
     SimpleDateFormat dateFormat = new SimpleDateFormat("mm:ss");
     return dateFormat.format(date);
+  }
+
+  public static boolean containsOnlyNumbers(String input) {
+    return input.matches("\\d+"); // \\d+ representa uno o más dígitos
   }
 }

@@ -25,5 +25,4 @@ public interface IntPersistenceSummoner extends GenericRepository<Summoner, Stri
 
   Optional<Summoner> findByNameContainingIgnoreCase(String name);
 
-  Summoner findSummonerByPuuid(@Param("puuid") String puuid);
 }

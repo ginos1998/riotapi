@@ -4,6 +4,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import riot.riotapi.dtos.SummonerDTO;
+import riot.riotapi.dtos.match.ParticipantDTO;
+import riot.riotapi.dtos.match.ParticipantInfoDTO;
+import riot.riotapi.entities.Champion;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.entities.match.Match;
 import riot.riotapi.entities.match.SummonerMatch;
@@ -98,15 +101,28 @@ public class ImpSummonerService implements IntSummonerService {
   }
 
   @Override
-  public void saveSummonerMatch(Long matchId, List<String> listSummonerPuuid) {
-    if (CommonFunctions.isNotNullOrEmpty(listSummonerPuuid)) {
-      for (String puuid: listSummonerPuuid) {
-        Summoner summoner = intPersistenceSummoner.findSummonerByPuuid(puuid);
-        SummonerMatch summonerMatch = new SummonerMatch(new Match(matchId), summoner);
-        this.persistenceSummonerMatch.save(summonerMatch);
-      }
+  public void saveSummonerMatch(Long matchId, List<ParticipantDTO> participantDTOList) {
+    if (CommonFunctions.isNotNullOrEmpty(participantDTOList)) {
+      List<Summoner> summonerList = participantDTOList.stream()
+              .map(sum -> new Summoner(sum.getSummonerId()))
+              .toList();
+      Match match = new Match(matchId);
 
+      List<SummonerMatch> sumMatchList = participantDTOList.stream()
+              .map(aux -> new SummonerMatch(match, summonerList.stream()
+                      .filter(sum -> sum.getSummonerId().equals(aux.getSummonerId()))
+                      .findFirst()
+                      .orElseThrow(),
+                      aux.getLane(), aux.getWin(), new Champion(aux.getChampionId()), aux.getTeamId()))
+              .toList();
+
+      this.persistenceSummonerMatch.saveAll(sumMatchList);
     }
+  }
+
+  @Override
+  public List<ParticipantInfoDTO> findMatchParticipantsByMatchId(Long matchId) {
+    return this.persistenceSummonerMatch.findMatchParticipantsByMatchId(matchId);
   }
 
   private void validateInput(String input) {

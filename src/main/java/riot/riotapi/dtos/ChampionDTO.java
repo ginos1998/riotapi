@@ -7,7 +7,8 @@ import java.util.ArrayList;
 
 @Data
 public class ChampionDTO {
-  private String id;
+  @JsonProperty("id")
+  private String championId;
   private String key;
   private String name;
   private String title;

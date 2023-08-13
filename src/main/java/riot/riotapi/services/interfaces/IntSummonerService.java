@@ -1,6 +1,8 @@
 package riot.riotapi.services.interfaces;
 
 import riot.riotapi.dtos.SummonerDTO;
+import riot.riotapi.dtos.match.ParticipantDTO;
+import riot.riotapi.dtos.match.ParticipantInfoDTO;
 import riot.riotapi.entities.Summoner;
 
 import java.util.List;
@@ -14,5 +16,6 @@ public interface IntSummonerService {
   List<SummonerDTO> getSummonerByPuuid(String puuid);
 
   Optional<Summoner> findByNameContainingIgnoreCase(String name);
-  void saveSummonerMatch(Long matchId, List<String> listSummonerPuuid);
+  void saveSummonerMatch(Long matchId, List<ParticipantDTO> participantDTOList);
+  List<ParticipantInfoDTO> findMatchParticipantsByMatchId(Long matchId);
 }

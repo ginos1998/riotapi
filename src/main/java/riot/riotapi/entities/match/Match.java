@@ -3,12 +3,14 @@ package riot.riotapi.entities.match;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@Entity(name = "match")
+@Entity()
+@Table(name = "match")
 public class Match {
     @Id
     @Column(name = "match_id")

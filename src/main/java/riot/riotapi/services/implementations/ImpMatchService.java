@@ -3,6 +3,7 @@ package riot.riotapi.services.implementations;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import riot.riotapi.dtos.match.MatchDTO;
 import riot.riotapi.dtos.match.MatchInfoDTO;
 import riot.riotapi.entities.match.Match;
 import riot.riotapi.repositories.interfaces.IntPersistenceMatch;
@@ -24,4 +25,11 @@ public class ImpMatchService implements IntMatchService {
     public void saveMatch(MatchInfoDTO matchInfoDTO) {
         persistenceMatch.save(mapper.map(matchInfoDTO, Match.class));
     }
+
+    @Override
+    public MatchDTO findMatchDTOByMatchId(Long matchId) {
+        return persistenceMatch.fGetMatchDTOByMatchId(matchId);
+    }
+
+
 }

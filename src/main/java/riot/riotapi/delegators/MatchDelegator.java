@@ -41,23 +41,38 @@ public class MatchDelegator {
   public MatchDTO getMatchById(String matchId, Boolean saveData) {
     MatchDTO matchDTO;
     try {
-      MatchRootDTO rootDTO = matchApiService.getMatchById(matchId);
-      matchDTO = createsMatchDto(rootDTO.getInfo());
+      matchDTO = findMatchIfExists(matchId);
 
-      if (saveData) {
-        this.matchService.saveMatch(rootDTO.getInfo());
+      if (matchDTO == null) {
+        MatchRootDTO rootDTO = matchApiService.getMatchById(matchId);
+        matchDTO = createsMatchDto(rootDTO.getInfo());
 
-        this.summonerDelegador.saveSummoners(rootDTO.getInfo().getParticipants());
-
-        this.summonerDelegador.saveSummonerMatch(rootDTO.getInfo().getMatchId(), rootDTO.getMetadata().getParticipants());
-
+        if (saveData) {
+          this.matchService.saveMatch(rootDTO.getInfo());
+          this.summonerDelegador.saveSummoners(rootDTO.getInfo().getParticipants());
+          this.summonerDelegador.saveSummonerMatch(rootDTO.getInfo().getMatchId(), rootDTO.getInfo().getParticipants());
+        }
       }
+
     } catch (Exception ex) {
       throw new ServiceException("Ha ocurrido un error inesperado al buscar la partida solicitada.\n".concat(ex.getMessage()));
     }
 
-
     return matchDTO;
+  }
+
+  private MatchDTO findMatchIfExists(String matchId){
+    String[] aux = matchId.split("_");
+
+    if (aux.length == 2 && CommonFunctions.containsOnlyNumbers(aux[1])) {
+      MatchDTO matchDTO = matchService.findMatchDTOByMatchId(Long.valueOf(aux[1]));
+      if (matchDTO != null) {
+        List<ParticipantInfoDTO> part = summonerDelegador.findMatchParticipantsByMatchId(Long.valueOf(aux[1]));
+        matchDTO.setParticipants(part);
+        return matchDTO;
+      }
+    }
+    return null;
   }
 
   private MatchDTO createsMatchDto(MatchInfoDTO infoDTO) {
