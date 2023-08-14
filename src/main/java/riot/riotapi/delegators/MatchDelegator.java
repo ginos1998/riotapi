@@ -5,32 +5,37 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.match.*;
+import riot.riotapi.entities.Spell;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.filters.MatchFilter;
 import riot.riotapi.services.interfaces.IntChampionService;
 import riot.riotapi.services.interfaces.IntMatchApiService;
 import riot.riotapi.services.interfaces.IntMatchService;
+import riot.riotapi.services.interfaces.IntSpellService;
 import riot.riotapi.utils.CommonFunctions;
 import riot.riotapi.utils.ConstantsExceptions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 public class MatchDelegator {
   private final IntMatchApiService matchApiService;
   private final IntMatchService matchService;
   private final IntChampionService championService;
+  private final IntSpellService spellService;
   private final SummonerDelegador summonerDelegador;
   private final ModelMapper mapper;
 
   @Autowired
   public MatchDelegator(IntMatchApiService matchApiService, IntMatchService matchService, IntChampionService championService,
-                        SummonerDelegador summonerDelegador) {
+                        IntSpellService spellService, SummonerDelegador summonerDelegador) {
     this.matchApiService = matchApiService;
     this.summonerDelegador = summonerDelegador;
     this.championService = championService;
+    this.spellService = spellService;
     this.matchService = matchService;
     this.mapper = new ModelMapper();
   }
@@ -128,6 +133,13 @@ public class MatchDelegator {
               ParticipantInfoDTO p = mapper.map(participant, ParticipantInfoDTO.class);
               if (participant.getChampionName() == null && participant.getChampionId() != null) {
                 p.setChampionName(this.championService.findByKey(participant.getChampionId()).getName());
+              }
+              if (participant.getSpell1Id() != null && participant.getSpell2Id() != null) {
+                List<Integer> spellsIds = Stream.of(p.getSpell1Id(), p.getSpell2Id()).toList();
+                List<String> spells = this.spellService.findSpellsByIds(spellsIds)
+                        .stream().map(Spell::getSpell).toList();
+                p.setSpellName1(spells.get(0));
+                p.setSpellName2(spells.get(1));
               }
               return p;
             })

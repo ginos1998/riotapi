@@ -1,5 +1,6 @@
 package riot.riotapi.controllers.api;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -11,6 +12,7 @@ import riot.riotapi.delegators.MatchDelegator;
 import riot.riotapi.dtos.match.MatchDTO;
 import riot.riotapi.dtos.match.MatchesDTO;
 import riot.riotapi.filters.MatchFilter;
+import riot.riotapi.utils.views.CommonView;
 
 
 @RestController
@@ -96,6 +98,7 @@ public class MatchApiController {
           @ApiResponse(code = 500, message = "Ha ocurrido un error inesperado.")
 
   })
+  @JsonView(CommonView.LiveView.class)
   public ResponseEntity<MatchDTO> getCurrentMatchInfo(@PathVariable String sumName) {
     MatchDTO matchDTO = matchDelegator.getCurrentMatchInfo(sumName);
 
