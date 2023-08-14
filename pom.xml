@@ -81,8 +81,12 @@
 			<artifactId>springfox-swagger2</artifactId>
 			<version>3.0.0</version>
 		</dependency>
-
-
+		<!-- https://discord4j.com/ -->
+		<dependency>
+			<groupId>com.discord4j</groupId>
+			<artifactId>discord4j-core</artifactId>
+			<version>3.2.5</version>
+		</dependency>
 
 	</dependencies>
 
