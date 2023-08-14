@@ -7,13 +7,9 @@ import lombok.Data;
 @Entity
 @Table(name = "stats")
 public class Stats {
+
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "id_stats")
-  private Long idStats;
-  @OneToOne
-  @JoinColumn(name = "key")
-  private Champion champion;
+  private Long key;
   @Column(name = "hp")
   private int hp;
   @Column(name = "hp_per_level")

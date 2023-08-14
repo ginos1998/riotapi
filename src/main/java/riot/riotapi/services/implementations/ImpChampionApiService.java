@@ -1,80 +1,144 @@
 package riot.riotapi.services.implementations;
 
-import riot.riotapi.dtos.mappers.imp.ChampionMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.HttpClientErrorException;
 import riot.riotapi.entities.Champion;
 import riot.riotapi.entities.ChampionData;
 import riot.riotapi.entities.Info;
 import riot.riotapi.entities.Stats;
-import riot.riotapi.exceptions.ServiceFactoryException;
+import riot.riotapi.exceptions.ServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import riot.riotapi.dtos.ChampionDTO;
 import riot.riotapi.dtos.ChampionDataDTO;
-import riot.riotapi.repositories.factories.PersistenceFactory;
+import riot.riotapi.repositories.interfaces.IntPersistenceChampion;
+import riot.riotapi.repositories.interfaces.IntPersistenceChampionData;
+import riot.riotapi.repositories.interfaces.IntPersistenceInfo;
+import riot.riotapi.repositories.interfaces.IntPersistenceStats;
 import riot.riotapi.services.interfaces.IntChampionApiService;
 import riot.riotapi.utils.CommonFunctions;
+import riot.riotapi.utils.ConstantsExceptions;
 import riot.riotapi.utils.URIs;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class ImpChampionApiService implements IntChampionApiService {
 
-  private RestTemplate restTemplate;
+  private final IntPersistenceChampionData intPersistenceChampionData;
+  private final IntPersistenceChampion intPersistenceChampion;
+  private final IntPersistenceStats intPersistenceStats;
+  private final IntPersistenceInfo intPersistenceInfo;
+  private final RestTemplate restTemplate;
 
-  private ImpChampionApiService() {
-    restTemplate = new RestTemplate();
+  @Autowired
+  private ImpChampionApiService(IntPersistenceChampionData intPersistenceChampionData, IntPersistenceChampion intPersistenceChampion,
+                                IntPersistenceStats intPersistenceStats, IntPersistenceInfo intPersistenceInfo) {
+
+    this.intPersistenceChampionData = intPersistenceChampionData;
+    this.intPersistenceChampion = intPersistenceChampion;
+    this.intPersistenceStats = intPersistenceStats;
+    this.intPersistenceInfo = intPersistenceInfo;
+    this.restTemplate = new RestTemplate();
   }
 
   @Override
   public ChampionDataDTO getChampionByName(String champName) {
-    String uri = URIs.URI_LOL_CHAMPION.replace("###", champName);
-    return restTemplate.getForObject(uri, ChampionDataDTO.class);
+
+    if (!CommonFunctions.isNotNullOrEmpty(champName)) {
+      throw new ServiceException(ConstantsExceptions.ERROR_BAD_INPUT_CHAMP_NAME);
+    }
+
+    ChampionDataDTO championDataDTO;
+
+    try {
+      String uri = URIs.URI_LOL_CHAMPION.replace("###", champName);
+      championDataDTO = restTemplate.getForObject(uri, ChampionDataDTO.class);
+    } catch (HttpClientErrorException ex) {
+      log.info(ConstantsExceptions.ERROR_SEARCHING_CHAMPION + champName);
+      throw new ServiceException(ConstantsExceptions.ERROR_SEARCHING_CHAMPION + champName, ex);
+    }
+
+    return championDataDTO;
   }
 
   @Override
   public ChampionDataDTO getAllChampions() {
-    return restTemplate.getForObject(URIs.URI_ALL_LOL_CHAMPIONS, ChampionDataDTO.class);
+    ChampionDataDTO championDataDTO;
+
+    try {
+      championDataDTO = restTemplate.getForObject(URIs.URI_ALL_LOL_CHAMPIONS, ChampionDataDTO.class);
+    } catch (HttpClientErrorException ex) {
+      log.info(ConstantsExceptions.ERROR_SEARCHING_CHAMPIONS);
+      throw new ServiceException(ConstantsExceptions.ERROR_SEARCHING_CHAMPIONS, ex);
+    }
+
+    return championDataDTO;
   }
 
   @Override
-  public String importAllChampions() throws ServiceFactoryException {
-    String response = "OK";
+  public String importAllChampions() throws ServiceException {
 
     ChampionDataDTO cd = getAllChampions();
-    cd.setLastUpdate(new Date());
 
     if (cd.getData() == null) {
-      throw new ServiceFactoryException("ERROR");
+      throw new ServiceException(ConstantsExceptions.ERROR_IMPORTING_CHAMPIONS);
     }
 
-    ChampionMapper mapper = new ChampionMapper();
+    String response;
 
-    ChampionData championData = mapper.toChampionData(cd);
-    PersistenceFactory.getIntPersistenceChampionData().save(championData);
+    try {
 
-    response = mapChampionsData(cd.getData(), championData);
+      ModelMapper mapper = new ModelMapper();
+
+      ChampionData championData = mapper.map(cd, ChampionData.class);
+
+      List<ChampionData> champDataList = this.intPersistenceChampionData.findAll();
+      if (CommonFunctions.isNotNullOrEmpty(champDataList)) {
+        for (ChampionData data: champDataList) {
+          if (data.getVersion().equals(championData.getVersion())) {
+            data.setLastUpdate(new Date());
+            intPersistenceChampionData.save(data);
+            championData = data;
+            break;
+          }
+        }
+      } else {
+        championData.setLastUpdate(new Date());
+        this.intPersistenceChampionData.save(championData);
+      }
+
+      response = mapChampionsData(cd.getData(), championData);
+
+    } catch (Exception ex) {
+      log.info(ConstantsExceptions.ERROR_IMPORTING_CHAMPIONS);
+      throw new ServiceException(ConstantsExceptions.ERROR_IMPORTING_CHAMPIONS, ex);
+    }
+
 
     return response;
   }
 
   private String mapChampionsData(Map<String, ChampionDTO> champs, ChampionData championData) {
-    ChampionMapper mapper;
     if (CommonFunctions.isNotNullOrEmpty(champs) && championData != null) {
-      mapper = new ChampionMapper();
+      ModelMapper mapper = new ModelMapper();
       for (ChampionDTO champ: champs.values()) {
-        Champion champion = mapper.toChampion(champ);
+        Champion champion = mapper.map(champ, Champion.class);
         champion.setChampData(championData);
-        PersistenceFactory.getIntPersistenceChampion().save(champion);
+        this.intPersistenceChampion.save(champion);
 
-        Info info = mapper.toInfo(champ.getInfoDTO());
-        info.setChampion(champion);
-        PersistenceFactory.getIntPersistenceInfo().save(info);
+        Info info = mapper.map(champ.getInfoDTO(), Info.class);
+        info.setKey(champion.getKey());
+        this.intPersistenceInfo.save(info);
 
-        Stats stats = mapper.toStats(champ.getStatsDTO());
-        stats.setChampion(champion);
-        PersistenceFactory.getIntPersistenceStats().save(stats);
+        Stats stats = mapper.map(champ.getStatsDTO(), Stats.class);
+        stats.setKey(champion.getKey());
+        this.intPersistenceStats.save(stats);
       }
     } else {
       return "ERROR";

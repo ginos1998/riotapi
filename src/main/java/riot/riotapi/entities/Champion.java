@@ -2,11 +2,10 @@ package riot.riotapi.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import riot.riotapi.dtos.*;
-
-import java.util.ArrayList;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 @Entity
 @Table(name = "champion")
 public class Champion {
@@ -14,8 +13,8 @@ public class Champion {
   @Id
   @Column(name = "key")
   private Long key;
-  @Column(name = "id")
-  private String id;
+  @Column(name = "champion_id")
+  private String championId;
   @OneToOne
   @JoinColumn(name = "id_champ_data")
   private ChampionData champData;
@@ -23,4 +22,8 @@ public class Champion {
   private String name;
   @Column(name = "title")
   private String title;
+
+  public Champion(Long key) {
+    this.key = key;
+  }
 }
