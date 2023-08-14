@@ -78,6 +78,7 @@ public class MatchApiController {
           @ApiResponse(code = 500, message = "Ha ocurrido un error inesperado.")
 
   })
+  @JsonView(CommonView.HistoryView.class)
   public ResponseEntity<MatchDTO> getMatchById(@PathVariable String matchId, @RequestParam(required = false, defaultValue = "false") Boolean saveData) {
     MatchDTO sumMatchesDTO = matchDelegator.getMatchById(matchId, saveData);
 
@@ -89,11 +90,11 @@ public class MatchApiController {
   }
 
   @GetMapping("/current-match/{sumName}")
-  @ApiOperation(value = "Obtiene datos de una partida.", response = MatchesDTO.class, responseContainer = "dto", produces = "application/json")
+  @ApiOperation(value = "Obtiene datos de una partida en juego.", response = MatchesDTO.class, responseContainer = "dto", produces = "application/json")
   @ApiResponses(value = {
-          @ApiResponse(code = 200, message = "Devuelve un dto con datos de una partida."),
-          @ApiResponse(code = 204, message = "No existe partida para el matchId dado."),
-          @ApiResponse(code = 409, message = "Error al obtener la partida."),
+          @ApiResponse(code = 200, message = "Devuelve un dto con datos de una partida en juego."),
+          @ApiResponse(code = 204, message = "No existe partida en juego para el sumName dado."),
+          @ApiResponse(code = 409, message = "Error al obtener la partida en juego."),
           @ApiResponse(code = 404, message = "Not found."),
           @ApiResponse(code = 500, message = "Ha ocurrido un error inesperado.")
 
