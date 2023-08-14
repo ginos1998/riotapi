@@ -8,20 +8,27 @@ estadisticas de invocadores, partidas, campeones, etc.
 
 ## Endpoints
 
-Tenemos dos urls principales:
-1. /riot-api/campeon
-2. /riot-api/las/invocador
+La API cuenta con endpoints para obtener informacion de campeones, invocadores y partidas. En lo posible, primero se busca en la base de datos, y si no encuentra los datos solicitados, hace una peticion a la api de riot. Los datos se guardan opcionalmente, al llamar un GET que tenga la opcion.
+
+1. Campeones
+   - [REQ] /riot-api/campeon
+      - [GET] /nombre
+      - [GET] /todos
+      - [POST] /importar/todos
+3. Invocadores
+   - [REQ] /riot-api/las/invocador
+      - [GET] ?name=&accountId=&puuid&saveIfExists=
+5. Partidas
+   - [REQ] /riot-api/las/partidas
+       - [GET] /by-puuid/{puuid}?{params}
+       - [GET] /by-summoner-name/{sumName}?{params}
+       - [GET] /by-matchId/{matchId}?saveData=
+       - [GET] /current-match/{sumName}
+   - *params(opcionales): startTime=&endTime=&queue=&type=&start=&count=&save
 
 En 1, se consume la API pública de [éste link](https://ddragon.leagueoflegends.com/cdn/13.13.1/data/en_US/champion.json)
-y tiene tres endpoints:
 
-1. /riot-api/campeon
-   1. [GET] /nombre : recibe el nombre del campeon que queremos buscar y retorna un JSON con sus datos.
-    Ejemplo: http://localhost:8080/riot-api/campeon/nombre?champName=Aatrox 
-   2. [GET] /todos : devuelve todos los campeones en formato JSON. Ejemplo: http://localhost:8080/riot-api/campeon/todos
-   3. [POST] /importar/todos : importa todos los campeones y los almacena en la base de datos, con sus propiedades. Retorna 'OK' si todo salió bien.
-
-En 2, se consume la API de Riot Games. Para ello, debemos tener una cuenta y logearnos en la [página para desarrolladores](https://developer.riotgames.com/). 
+En 2 y 3, se consume la API de Riot Games. Para ello, debemos tener una cuenta y logearnos en la [página para desarrolladores](https://developer.riotgames.com/). 
 Una vez logeados, podemos generar la apikey (que vence cada 24 hs) y cambiarla en la base de datos:
 
     -- si es por primera vez, insertamos datos
@@ -33,13 +40,6 @@ Una vez logeados, podemos generar la apikey (que vence cada 24 hs) y cambiarla e
     SET api_key = 'NUEVA API KEY',
         last_update = current_date 
     WHERE id_riot_api = 1;
-
-Hecho ésto, tenemos tres endpoints:
-
-1. /riot-api/las/invocador
-   1. [GET] /nombre/{name} : le damos el nombre del invocador y obtenemos un JSON con los datos del mismo. Ejemplo: http://localhost:8080/riot-api/las/invocador/nombre/PalitKing
-   2. [GET] /idCuenta/{accountId} : si conocemos la accountId del invocador, lo podemos buscar. Retorna un JSON con los datos del mismo.
-   3. [GET] /puuid/{puuid} : si conocemos la puuid del invocador, lo podemos buscar. Retorna un JSON con los datos del mismo.
 
 ## Base de Datos
 
