@@ -8,9 +8,9 @@ public abstract class MessageListener {
     public Mono<Void> processCommand(Message eventMessage) {
         return Mono.just(eventMessage)
                 .filter(message -> message.getAuthor().map(user -> !user.isBot()).orElse(false))
-                .filter(message -> message.getContent().equalsIgnoreCase("!trolls"))
+                .filter(message -> message.getContent().equals("!ping"))
                 .flatMap(Message::getChannel)
-                .flatMap(channel -> channel.createMessage("\nList of trolls:\n - Jorgën Almiklopp \n - Bilaalk2k13\n - Vaalenrb\n - aKILLon"))
+                .flatMap(channel -> channel.createMessage("pong!"))
                 .then();
     }
 }
