@@ -11,11 +11,13 @@ import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.match.*;
 import riot.riotapi.entities.Champion;
 import riot.riotapi.entities.RiotApi;
+import riot.riotapi.entities.Spell;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.filters.MatchFilter;
 import riot.riotapi.repositories.interfaces.IntRiotApi;
 import riot.riotapi.services.interfaces.IntMatchApiService;
+import riot.riotapi.services.interfaces.IntSpellService;
 import riot.riotapi.utils.CommonFunctions;
 import riot.riotapi.utils.Constants;
 import riot.riotapi.utils.ConstantsExceptions;
@@ -23,6 +25,7 @@ import riot.riotapi.utils.URIs;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class ImpMatchApiService implements IntMatchApiService {
@@ -31,11 +34,13 @@ public class ImpMatchApiService implements IntMatchApiService {
   private String apiKey;
   private final ModelMapper mapper;
   private final ImpChampionService championService;
+  private final IntSpellService spellService;
   @Autowired
-  public ImpMatchApiService(IntRiotApi intRiotApi, ImpChampionService championService) {
+  public ImpMatchApiService(IntRiotApi intRiotApi, ImpChampionService championService, IntSpellService spellService) {
     this.intRiotApi = intRiotApi;
     mapper = new ModelMapper();
     this.championService = championService;
+    this.spellService = spellService;
   }
 
   @Override
@@ -162,20 +167,22 @@ public class ImpMatchApiService implements IntMatchApiService {
                                   .stream()
                                   .collect(Collectors.toMap(Champion::getKey, Champion::getName));
 
+    Map<Integer, String> spells = spellService.findSpellsByIds(participants.stream()
+                                                                    .flatMap(p -> Stream.of(p.getSpell1Id(), p.getSpell2Id()))
+                                                                    .toList())
+                                  .stream()
+                                  .collect(Collectors.toMap(Spell::getSpellId, Spell::getSpell));
+
     return participants.stream()
             .map(participant -> {
               ParticipantInfoDTO p = mapper.map(participant, ParticipantInfoDTO.class);
               if (p.getChampionName() == null) {
                 p.setChampionName(champions.get(participant.getChampionId()));
               }
+
               if (participant.getSpell1Id() != null && participant.getSpell2Id() != null) {
-//                List<Integer> spellsIds = Stream.of(p.getSpell1Id(), p.getSpell2Id()).toList();
-//                List<String> spells = this.spellService.findSpellsByIds(spellsIds)
-//                        .stream().map(Spell::getSpell).toList();
-//                p.setSpellName1(spells.get(0));
-//                p.setSpellName2(spells.get(1));
-                p.setSpellName1("Agua");
-                p.setSpellName2("Fuego");
+                p.setSpellName1(spells.get(participant.getSpell1Id()));
+                p.setSpellName2(spells.get(participant.getSpell2Id()));
               }
               return p;
             })
