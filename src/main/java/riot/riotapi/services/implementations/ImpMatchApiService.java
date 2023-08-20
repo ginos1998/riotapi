@@ -9,8 +9,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.match.*;
+import riot.riotapi.entities.Champion;
 import riot.riotapi.entities.RiotApi;
-import riot.riotapi.entities.Spell;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.filters.MatchFilter;
@@ -22,7 +22,7 @@ import riot.riotapi.utils.ConstantsExceptions;
 import riot.riotapi.utils.URIs;
 
 import java.util.*;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 @Service
 public class ImpMatchApiService implements IntMatchApiService {
@@ -30,10 +30,12 @@ public class ImpMatchApiService implements IntMatchApiService {
   private WebClient webClient;
   private String apiKey;
   private final ModelMapper mapper;
+  private final ImpChampionService championService;
   @Autowired
-  public ImpMatchApiService(IntRiotApi intRiotApi) {
+  public ImpMatchApiService(IntRiotApi intRiotApi, ImpChampionService championService) {
     this.intRiotApi = intRiotApi;
     mapper = new ModelMapper();
+    this.championService = championService;
   }
 
   @Override
@@ -153,15 +155,21 @@ public class ImpMatchApiService implements IntMatchApiService {
   }
 
   private List<ParticipantInfoDTO> getListParticipantsInfo(ArrayList<ParticipantDTO> participants) {
+
+    Map<Long, String> champions = championService.findByKeyIn(participants.stream()
+                                                                    .map(ParticipantDTO::getChampionId)
+                                                                    .toList())
+                                  .stream()
+                                  .collect(Collectors.toMap(Champion::getKey, Champion::getName));
+
     return participants.stream()
             .map(participant -> {
               ParticipantInfoDTO p = mapper.map(participant, ParticipantInfoDTO.class);
-              if (participant.getChampionName() == null && participant.getChampionId() != null) {
-                p.setChampionName("no one");
-                // this.championService.findByKey(participant.getChampionId()).getName()
+              if (p.getChampionName() == null) {
+                p.setChampionName(champions.get(participant.getChampionId()));
               }
               if (participant.getSpell1Id() != null && participant.getSpell2Id() != null) {
-                List<Integer> spellsIds = Stream.of(p.getSpell1Id(), p.getSpell2Id()).toList();
+//                List<Integer> spellsIds = Stream.of(p.getSpell1Id(), p.getSpell2Id()).toList();
 //                List<String> spells = this.spellService.findSpellsByIds(spellsIds)
 //                        .stream().map(Spell::getSpell).toList();
 //                p.setSpellName1(spells.get(0));

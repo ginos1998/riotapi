@@ -15,4 +15,6 @@ public interface IntPersistenceChampion extends GenericRepository<Champion, Long
   List<Champion> getChampionByName(String name);
 
   Champion findByKey(Long key);
+
+  List<Champion> findByKeyIn(List<Long> champIds);
 }

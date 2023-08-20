@@ -127,6 +127,11 @@ public class ImpChampionService implements IntChampionService {
     return this.intPersistenceChampion.findByKey(key);
   }
 
+  @Override
+  public List<Champion> findByKeyIn(List<Long> champIds) {
+    return intPersistenceChampion.findByKeyIn(champIds);
+  }
+
   private InfoDTO findInfoByChampKey(String key) {
     return mapper.map(intPersistenceInfo.findByChampKey(Long.parseLong(key)), InfoDTO.class);
   }

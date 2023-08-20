@@ -16,6 +16,7 @@ import riot.riotapi.dtos.match.ParticipantInfoDTO;
 import riot.riotapi.exceptions.DiscordException;
 import riot.riotapi.externals.discord.utils.URLs;
 
+import java.time.Duration;
 import java.util.List;
 
 @Component
@@ -53,11 +54,14 @@ public class SummonerPlayingCmd implements SlashCommand {
                         .filter(participant -> participant.getTeamId() == 100)
                         .toList();
 
+                String mode = match.getMode();
+
                 return  event.reply()
                         .withEphemeral(false)
-                        .withEmbeds(headerEmbed(name),
+                        .withEmbeds(headerEmbed(name, mode),
                                     createTeamEmbed(redTeamParticipants, "RED TEAM", Color.RED),
-                                    createTeamEmbed(blueTeamParticipants, "BLUE TEAM", Color.BLUE));
+                                    createTeamEmbed(blueTeamParticipants, "BLUE TEAM", Color.BLUE))
+                        .timeout(Duration.ofSeconds(5));
             });
 
         } catch (DiscordException de) {
@@ -66,13 +70,13 @@ public class SummonerPlayingCmd implements SlashCommand {
         }
     }
 
-    private EmbedCreateSpec headerEmbed(String sumName) {
+    private EmbedCreateSpec headerEmbed(String sumName, String mode) {
 
         return EmbedCreateSpec.builder()
                 .color(Color.GRAY)
                 .title("Live Match of ".concat(sumName))
                 .author("More details", URLs.URL_POROFESOR_GG.concat(sumName), URLs.ICON_POROFESOR_GG)
-                .description("LAS Match")
+                .description("LAS Match. Mode: ".concat(mode))
                 .build();
     }
 
