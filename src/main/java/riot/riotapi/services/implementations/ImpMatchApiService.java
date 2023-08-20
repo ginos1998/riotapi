@@ -1,12 +1,16 @@
 package riot.riotapi.services.implementations;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
+import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.match.*;
 import riot.riotapi.entities.RiotApi;
+import riot.riotapi.entities.Spell;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.filters.MatchFilter;
@@ -18,15 +22,18 @@ import riot.riotapi.utils.ConstantsExceptions;
 import riot.riotapi.utils.URIs;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 @Service
 public class ImpMatchApiService implements IntMatchApiService {
   private final IntRiotApi intRiotApi;
   private WebClient webClient;
   private String apiKey;
+  private final ModelMapper mapper;
   @Autowired
   public ImpMatchApiService(IntRiotApi intRiotApi) {
     this.intRiotApi = intRiotApi;
+    mapper = new ModelMapper();
   }
 
   @Override
@@ -109,6 +116,62 @@ public class ImpMatchApiService implements IntMatchApiService {
       throw new ServiceException("Ha ocurrido un error inesperado al buscar la partida en juego solicitada.\n".concat(ex.getMessage()));
     }
     return liveMatchDTO;
+  }
+
+  @Override
+  public Mono<MatchDTO> getSummonerLiveMatch(String sumName) {
+
+    if (!CommonFunctions.isNotNullOrEmpty(apiKey) || webClient == null) {
+      initApiKey();
+    }
+
+    String url = URIs.URI_SUMMONER_ACCOUNT_NAME.concat(sumName);
+    return webClient.get()
+            .uri(url)
+            .header("X-Riot-Token", this.apiKey)
+            .retrieve()
+            .bodyToMono(SummonerDTO.class)
+            .flatMap(summonerDTO -> {
+              String liveMatchUrl = URIs.URI_LOL_LIVE_MATCH.concat(summonerDTO.getSummonerId());
+
+              return webClient.get()
+                      .uri(liveMatchUrl)
+                      .header("X-Riot-Token", this.apiKey)
+                      .retrieve()
+                      .bodyToMono(LiveMatchRootDTO.class)
+                      .map(liveMatchDTO -> {
+                        MatchDTO matchDTO = new MatchDTO();
+                        matchDTO.setMode(liveMatchDTO.getMode());
+                        matchDTO.setStartTime(CommonFunctions.getDateAsString(liveMatchDTO.getStartTime()));
+                        matchDTO.setDuration(CommonFunctions.getDurationMMssAsString(liveMatchDTO.getDuration()));
+                        matchDTO.setParticipants(getListParticipantsInfo(liveMatchDTO.getParticipants()));
+                        return matchDTO;
+                      })
+                      .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.empty());
+            })
+            .switchIfEmpty(Mono.empty());
+  }
+
+  private List<ParticipantInfoDTO> getListParticipantsInfo(ArrayList<ParticipantDTO> participants) {
+    return participants.stream()
+            .map(participant -> {
+              ParticipantInfoDTO p = mapper.map(participant, ParticipantInfoDTO.class);
+              if (participant.getChampionName() == null && participant.getChampionId() != null) {
+                p.setChampionName("no one");
+                // this.championService.findByKey(participant.getChampionId()).getName()
+              }
+              if (participant.getSpell1Id() != null && participant.getSpell2Id() != null) {
+                List<Integer> spellsIds = Stream.of(p.getSpell1Id(), p.getSpell2Id()).toList();
+//                List<String> spells = this.spellService.findSpellsByIds(spellsIds)
+//                        .stream().map(Spell::getSpell).toList();
+//                p.setSpellName1(spells.get(0));
+//                p.setSpellName2(spells.get(1));
+                p.setSpellName1("Agua");
+                p.setSpellName2("Fuego");
+              }
+              return p;
+            })
+            .toList();
   }
 
   private void initApiKey() {

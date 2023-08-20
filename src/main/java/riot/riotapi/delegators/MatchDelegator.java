@@ -3,6 +3,7 @@ package riot.riotapi.delegators;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.match.*;
 import riot.riotapi.entities.Spell;
@@ -158,4 +159,7 @@ public class MatchDelegator {
     return sumList.get(0);
   }
 
+  public Mono<MatchDTO> getSummonerLiveMatch(String sumName) {
+    return matchApiService.getSummonerLiveMatch(sumName);
+  }
 }
