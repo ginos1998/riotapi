@@ -4,6 +4,7 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -34,6 +35,8 @@ import java.util.stream.Stream;
 public class ImpMatchApiService implements IntMatchApiService {
   private final IntRiotApi intRiotApi;
   private WebClient webClient;
+
+  @Value("${riot.apikey}")
   private String apiKey;
   private final ModelMapper mapper;
   private final ImpChampionService championService;
@@ -47,6 +50,7 @@ public class ImpMatchApiService implements IntMatchApiService {
     this.championService = championService;
     this.spellService = spellService;
     this.summonerApiService = summonerApiService;
+    webClient = WebClient.create();
   }
 
   @Override
@@ -136,6 +140,7 @@ public class ImpMatchApiService implements IntMatchApiService {
 
     if (!CommonFunctions.isNotNullOrEmpty(apiKey) || webClient == null) {
       initApiKey();
+      logger.info("apikey and webClient initialized.".concat(sumName));
     }
 
     String url = URIs.URI_SUMMONER_ACCOUNT_NAME.concat(sumName);
@@ -179,13 +184,13 @@ public class ImpMatchApiService implements IntMatchApiService {
                     .flatMap(p -> Stream.of(p.getSpell1Id(), p.getSpell2Id()))
                     .toList())
             .stream()
-            .collect(Collectors.toMap(Spell::getSpellId, Spell::getSpell));
+            .collect(Collectors.toMap(Spell::getSpellId, Spell::getEmoji));
 
-    Mono<List<SummonerDTO>> summoners = summonerApiService.findMatchSummonersByName(participants.stream()
-            .map(ParticipantDTO::getSummonerName)
-            .toList());
-
-    summoners.subscribe(s -> logger.info("summoners list size="+s.size()));
+//    Mono<List<SummonerDTO>> summoners = summonerApiService.findMatchSummonersByName(participants.stream()
+//            .map(ParticipantDTO::getSummonerName)
+//            .toList());
+//
+//    summoners.subscribe(s -> logger.info("summoners list size="+s.size()));
 
 
     return participants.stream()
@@ -196,10 +201,9 @@ public class ImpMatchApiService implements IntMatchApiService {
               }
 
               if (participant.getSpell1Id() != null && participant.getSpell2Id() != null) {
-                p.setSpellName1(spells.get(participant.getSpell1Id()));
-                p.setSpellName2(spells.get(participant.getSpell2Id()));
+                p.setSpell1Emoji(spells.get(participant.getSpell1Id()));
+                p.setSpell2Emoji(spells.get(participant.getSpell2Id()));
               }
-              p.setSummonerLevel(111);
               return p;
             })
             .toList();

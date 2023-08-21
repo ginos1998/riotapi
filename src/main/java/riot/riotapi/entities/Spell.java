@@ -17,6 +17,8 @@ public class Spell {
     private Integer spellId;
     @Column(name = "spell")
     private String spell;
+    @Column(name = "emoji")
+    private String emoji;
 
     public Spell(String spell) {
         this.spell = spell;

@@ -26,6 +26,8 @@ public class ParticipantInfoDTO {
     public String spellName1;
     @JsonView(CommonView.LiveView.class)
     public String spellName2;
+    public String spell1Emoji;
+    public String spell2Emoji;
 
     public ParticipantInfoDTO(String summonerName, String championName, String lane, Boolean win, Integer teamId) {
         this.summonerName = summonerName;
