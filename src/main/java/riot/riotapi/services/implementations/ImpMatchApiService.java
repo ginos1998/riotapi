@@ -1,6 +1,8 @@
 package riot.riotapi.services.implementations;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import riot.riotapi.filters.MatchFilter;
 import riot.riotapi.repositories.interfaces.IntRiotApi;
 import riot.riotapi.services.interfaces.IntMatchApiService;
 import riot.riotapi.services.interfaces.IntSpellService;
+import riot.riotapi.services.interfaces.IntSummonerApiService;
 import riot.riotapi.utils.CommonFunctions;
 import riot.riotapi.utils.Constants;
 import riot.riotapi.utils.ConstantsExceptions;
@@ -35,12 +38,15 @@ public class ImpMatchApiService implements IntMatchApiService {
   private final ModelMapper mapper;
   private final ImpChampionService championService;
   private final IntSpellService spellService;
+  private final Logger logger = LoggerFactory.getLogger(this.getClass());
+  private final IntSummonerApiService summonerApiService;
   @Autowired
-  public ImpMatchApiService(IntRiotApi intRiotApi, ImpChampionService championService, IntSpellService spellService) {
+  public ImpMatchApiService(IntRiotApi intRiotApi, ImpChampionService championService, IntSpellService spellService, IntSummonerApiService summonerApiService) {
     this.intRiotApi = intRiotApi;
     mapper = new ModelMapper();
     this.championService = championService;
     this.spellService = spellService;
+    this.summonerApiService = summonerApiService;
   }
 
   @Override
@@ -133,6 +139,7 @@ public class ImpMatchApiService implements IntMatchApiService {
     }
 
     String url = URIs.URI_SUMMONER_ACCOUNT_NAME.concat(sumName);
+    logger.info("Start champion api request with ".concat(sumName));
     return webClient.get()
             .uri(url)
             .header("X-Riot-Token", this.apiKey)
@@ -140,7 +147,7 @@ public class ImpMatchApiService implements IntMatchApiService {
             .bodyToMono(SummonerDTO.class)
             .flatMap(summonerDTO -> {
               String liveMatchUrl = URIs.URI_LOL_LIVE_MATCH.concat(summonerDTO.getSummonerId());
-
+              logger.info("Start live match api request with ".concat(sumName));
               return webClient.get()
                       .uri(liveMatchUrl)
                       .header("X-Riot-Token", this.apiKey)
@@ -152,6 +159,7 @@ public class ImpMatchApiService implements IntMatchApiService {
                         matchDTO.setStartTime(CommonFunctions.getDateAsString(liveMatchDTO.getStartTime()));
                         matchDTO.setDuration(CommonFunctions.getDurationMMssAsString(liveMatchDTO.getDuration()));
                         matchDTO.setParticipants(getListParticipantsInfo(liveMatchDTO.getParticipants()));
+                        logger.info("Live match mapped and returning for ".concat(sumName));
                         return matchDTO;
                       })
                       .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.empty());
@@ -162,16 +170,23 @@ public class ImpMatchApiService implements IntMatchApiService {
   private List<ParticipantInfoDTO> getListParticipantsInfo(ArrayList<ParticipantDTO> participants) {
 
     Map<Long, String> champions = championService.findByKeyIn(participants.stream()
-                                                                    .map(ParticipantDTO::getChampionId)
-                                                                    .toList())
-                                  .stream()
-                                  .collect(Collectors.toMap(Champion::getKey, Champion::getName));
+                    .map(ParticipantDTO::getChampionId)
+                    .toList())
+            .stream()
+            .collect(Collectors.toMap(Champion::getKey, Champion::getName));
 
     Map<Integer, String> spells = spellService.findSpellsByIds(participants.stream()
-                                                                    .flatMap(p -> Stream.of(p.getSpell1Id(), p.getSpell2Id()))
-                                                                    .toList())
-                                  .stream()
-                                  .collect(Collectors.toMap(Spell::getSpellId, Spell::getSpell));
+                    .flatMap(p -> Stream.of(p.getSpell1Id(), p.getSpell2Id()))
+                    .toList())
+            .stream()
+            .collect(Collectors.toMap(Spell::getSpellId, Spell::getSpell));
+
+    Mono<List<SummonerDTO>> summoners = summonerApiService.findMatchSummonersByName(participants.stream()
+            .map(ParticipantDTO::getSummonerName)
+            .toList());
+
+    summoners.subscribe(s -> logger.info("summoners list size="+s.size()));
+
 
     return participants.stream()
             .map(participant -> {
@@ -184,6 +199,7 @@ public class ImpMatchApiService implements IntMatchApiService {
                 p.setSpellName1(spells.get(participant.getSpell1Id()));
                 p.setSpellName2(spells.get(participant.getSpell2Id()));
               }
+              p.setSummonerLevel(111);
               return p;
             })
             .toList();

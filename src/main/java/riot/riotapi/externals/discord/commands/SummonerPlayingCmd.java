@@ -46,23 +46,33 @@ public class SummonerPlayingCmd implements SlashCommand {
             Mono<MatchDTO> liveMatch = this.matchController.getSummonerLiveMatch(name);
 
             return liveMatch.flatMap(match -> {
-                List<ParticipantInfoDTO> redTeamParticipants = match.getParticipants().stream()
-                        .filter(participant -> participant.getTeamId() == 200)
-                        .toList();
+                        logger.debug("Start creating embed message.");
+                        List<ParticipantInfoDTO> redTeamParticipants = match.getParticipants().stream()
+                                .filter(participant -> participant.getTeamId() == 200)
+                                .toList();
 
-                List<ParticipantInfoDTO> blueTeamParticipants = match.getParticipants().stream()
-                        .filter(participant -> participant.getTeamId() == 100)
-                        .toList();
+                        List<ParticipantInfoDTO> blueTeamParticipants = match.getParticipants().stream()
+                                .filter(participant -> participant.getTeamId() == 100)
+                                .toList();
 
-                String mode = match.getMode();
+                        String mode = match.getMode();
 
-                return  event.reply()
-                        .withEphemeral(false)
-                        .withEmbeds(headerEmbed(name, mode),
-                                    createTeamEmbed(redTeamParticipants, "RED TEAM", Color.RED),
-                                    createTeamEmbed(blueTeamParticipants, "BLUE TEAM", Color.BLUE))
-                        .timeout(Duration.ofSeconds(5));
-            });
+                        return  event.reply()
+                                .withEphemeral(false)
+                                .withEmbeds(headerEmbed(name, mode),
+                                            createTeamEmbed(redTeamParticipants, "RED TEAM", Color.RED),
+                                            createTeamEmbed(blueTeamParticipants, "BLUE TEAM", Color.BLUE))
+                                .timeout(Duration.ofSeconds(5));
+                    })
+                    .timeout(Duration.ofSeconds(6))
+                    .switchIfEmpty(Mono.defer(() -> {
+                        logger.debug("No live match found. Returning default embed.");
+                        return event.reply()
+                                                            .withEphemeral(false)
+                                                            .withEmbeds(notPlayingEmbed(name))
+                                                            .then();
+                    }
+                    ));
 
         } catch (DiscordException de) {
             logger.error("Ha ocurrido un error al ejecutar el comando ".concat(getName()));
@@ -76,7 +86,14 @@ public class SummonerPlayingCmd implements SlashCommand {
                 .color(Color.GRAY)
                 .title("Live Match of ".concat(sumName))
                 .author("More details", URLs.URL_POROFESOR_GG.concat(sumName), URLs.ICON_POROFESOR_GG)
-                .description("LAS Match. Mode: ".concat(mode))
+                .thumbnail(URLs.ICON_LoT_BOT)
+                .description(String.format(
+                        """
+                        ```fix
+                        LAS Match. Mode: %s
+                        ```
+                        """, mode
+                ))
                 .build();
     }
 
@@ -84,18 +101,30 @@ public class SummonerPlayingCmd implements SlashCommand {
         StringBuilder summoners = new StringBuilder();
         StringBuilder champions = new StringBuilder();
         StringBuilder spells = new StringBuilder();
-
+        int line = 0;
+        String startWith = teamColor.equals(Color.RED) ? "```diff\n" : "```fix\n";
         for(ParticipantInfoDTO match: teamParticipants) {
-            summoners.append(match.getSummonerName()).append('\n');
-            champions.append(match.getChampionName()).append('\n');
-            spells.append(match.getSpellName1()).append(" | ").append(match.getSpellName2()).append('\n');
+            String quote = ((line) %2 == 0) ? "- " : " ";
+            String lineColor = ((line++) %2 == 0) ? startWith : "```md\n";
+            summoners.append(lineColor).append(quote).append(match.getSummonerName()).append('\n').append(quote).append(match.getSummonerLevel()).append("\n").append("```");
+            champions.append(lineColor).append(quote).append(match.getChampionName()).append("\n```").append(":fire:  :zap:\n");
+            //spells.append(lineColor).append(quote).append(match.getSpellName1()).append("  ").append(match.getSpellName2()).append("\n\n").append("```");
         }
         return EmbedCreateSpec.builder()
                 .color(teamColor)
                 .title(teamName)
                 .addField("Summoner", summoners.toString(), true)
                 .addField("Champion", champions.toString(), true)
-                .addField("Spells", spells.toString(), true)
+                //.addField("Spells", spells.toString(), true)
+                .build();
+    }
+
+    private EmbedCreateSpec notPlayingEmbed(String sumName) {
+        return EmbedCreateSpec.builder()
+                .color(Color.YELLOW)
+                .author("League Of Trolls", URLs.URL_LoT_REPO , URLs.ICON_LoT_BOT)
+                .title("UPS! Not found")
+                .description("The summoner ".concat(sumName).concat(" is not playing any match."))
                 .build();
     }
 }

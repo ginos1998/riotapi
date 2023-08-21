@@ -1,10 +1,11 @@
 package riot.riotapi.externals.discord.commands;
 
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
+import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.rest.util.Color;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import discord4j.core.object.command.ApplicationCommandInteractionOption;
-import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
+import riot.riotapi.externals.discord.utils.URLs;
 
 @Component
 public class AboutCommand implements SlashCommand {
@@ -15,20 +16,20 @@ public class AboutCommand implements SlashCommand {
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
-                /*
-        Since slash command options are optional according to discord, we will wrap it into the following function
-        that gets the value of our option as a String without chaining several .get() on all the optional values
 
-        In this case, there is no fear it will return empty/null as this is marked "required: true" in our json.
-         */
-        String name = event.getOption("name")
-                .flatMap(ApplicationCommandInteractionOption::getValue)
-                .map(ApplicationCommandInteractionOptionValue::asString)
-                .get(); //This is warning us that we didn't check if its present, we can ignore this on required options
-
-        //Reply to the slash command, with the name the user supplied
         return  event.reply()
                 .withEphemeral(true)
-                .withContent("This BOT is about League Of Legends matches, stats, and more. Created by ginos1998.");
+                .withEmbeds(aboutEmbed());
+    }
+
+    private EmbedCreateSpec aboutEmbed() {
+
+        return EmbedCreateSpec.builder()
+                .color(Color.GRAY)
+                .author("Author: ginos1998", URLs.URL_LoT_REPO, URLs.ICON_LoT_BOT)
+                .title("About League of Trolls")
+                .description("> This BOT is about League Of Legends matches, stats, and more.")
+                .footer("Beta version.", URLs.ICON_LoT_BOT)
+                .build();
     }
 }
