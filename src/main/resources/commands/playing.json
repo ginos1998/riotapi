@@ -1,0 +1,12 @@
+{
+  "name": "playing",
+  "description": "Check if the summoner is playing now.",
+  "options": [
+    {
+      "name": "name",
+      "description": "Summoner name",
+      "type": 3,
+      "required": true
+    }
+  ]
+}

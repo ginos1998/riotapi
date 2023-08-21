@@ -11,6 +11,8 @@ public class ParticipantInfoDTO {
     @JsonView({CommonView.HistoryView.class, CommonView.LiveView.class})
     private String summonerName;
     @JsonView({CommonView.HistoryView.class, CommonView.LiveView.class})
+    private int summonerLevel;
+    @JsonView({CommonView.HistoryView.class, CommonView.LiveView.class})
     private String championName;
     @JsonView(CommonView.HistoryView.class)
     private String lane;
@@ -24,6 +26,8 @@ public class ParticipantInfoDTO {
     public String spellName1;
     @JsonView(CommonView.LiveView.class)
     public String spellName2;
+    public String spell1Emoji;
+    public String spell2Emoji;
 
     public ParticipantInfoDTO(String summonerName, String championName, String lane, Boolean win, Integer teamId) {
         this.summonerName = summonerName;

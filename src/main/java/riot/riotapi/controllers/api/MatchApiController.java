@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 import riot.riotapi.delegators.MatchDelegator;
 import riot.riotapi.dtos.match.MatchDTO;
 import riot.riotapi.dtos.match.MatchesDTO;
@@ -108,6 +109,12 @@ public class MatchApiController {
     } else {
       return ResponseEntity.noContent().build();
     }
+  }
+
+  @GetMapping("/live-match/{sumName}")
+  @JsonView(CommonView.LiveView.class)
+  public Mono<MatchDTO> getSummonerLiveMatch(@PathVariable String sumName) {
+    return matchDelegator.getSummonerLiveMatch(sumName);
   }
 
 }

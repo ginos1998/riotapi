@@ -2,6 +2,8 @@ package riot.riotapi.services.implementations;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.entities.RiotApi;
 import riot.riotapi.exceptions.ServiceException;
@@ -93,6 +95,24 @@ public class ImpSummonerApiService implements IntSummonerApiService {
     }
 
     return dtoList;
+  }
+
+  @Override
+  public Mono<List<SummonerDTO>> findMatchSummonersByName(List<String> summonersNames) {
+    if (!CommonFunctions.isNotNullOrEmpty(apiKey)) {
+      initApiKey();
+    }
+    List<Mono<SummonerDTO>> summonerMonos = summonersNames.stream()
+            .map(sumName ->
+                    webClient.get()
+                              .uri(URIs.URI_SUMMONER_ACCOUNT_NAME + sumName + getApiKeyURLFormat(), sumName, apiKey)
+                              .retrieve()
+                              .bodyToMono(SummonerDTO.class)
+            )
+            .toList();
+
+    return Flux.concat(summonerMonos)
+                .collectList();
   }
 
   private void validateInput(String input) {
