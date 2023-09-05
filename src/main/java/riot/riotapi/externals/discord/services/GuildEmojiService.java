@@ -51,7 +51,7 @@ public class GuildEmojiService {
     }
 
     private void fillChampionJsonFile() {
-        File folder = new File("");
+        File folder = new File("src/main/resources/static/champ-icons");
 
         if (folder.isDirectory()) {
             File[] imageFiles = folder.listFiles((dir, name) -> (name.toLowerCase().endsWith(".webp") || name.toLowerCase().endsWith(".png")));
