@@ -9,16 +9,16 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.match.*;
 import riot.riotapi.entities.Champion;
-import riot.riotapi.entities.RiotApi;
 import riot.riotapi.entities.Spell;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.filters.MatchFilter;
-import riot.riotapi.repositories.interfaces.IntRiotApi;
 import riot.riotapi.services.interfaces.IntMatchApiService;
 import riot.riotapi.services.interfaces.IntSpellService;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
@@ -33,8 +33,7 @@ import java.util.stream.Stream;
 
 @Service
 public class ImpMatchApiService implements IntMatchApiService {
-  private final IntRiotApi intRiotApi;
-  private WebClient webClient;
+  private final WebClient webClient;
 
   @Value("${riot.apikey}")
   private String apiKey;
@@ -44,8 +43,7 @@ public class ImpMatchApiService implements IntMatchApiService {
   private final Logger logger = LoggerFactory.getLogger(this.getClass());
   private final IntSummonerApiService summonerApiService;
   @Autowired
-  public ImpMatchApiService(IntRiotApi intRiotApi, ImpChampionService championService, IntSpellService spellService, IntSummonerApiService summonerApiService) {
-    this.intRiotApi = intRiotApi;
+  public ImpMatchApiService(ImpChampionService championService, IntSpellService spellService, IntSummonerApiService summonerApiService) {
     mapper = new ModelMapper();
     this.championService = championService;
     this.spellService = spellService;
@@ -56,9 +54,6 @@ public class ImpMatchApiService implements IntMatchApiService {
   @Override
   public MatchesDTO getSummonerMatchesByPuuid(Summoner summoner, MatchFilter filter) {
     try {
-      if (!CommonFunctions.isNotNullOrEmpty(apiKey)) {
-        initApiKey();
-      }
 
       validatesFilter(filter);
 
@@ -82,10 +77,6 @@ public class ImpMatchApiService implements IntMatchApiService {
     try {
       if (!CommonFunctions.isNotNullOrEmpty(matchId)) {
         throw new ServiceException("El valor de matchId no puede ser null o vacío.");
-      }
-
-      if (!CommonFunctions.isNotNullOrEmpty(apiKey)) {
-        initApiKey();
       }
 
       matchRootDTO = webClient.get()
@@ -114,10 +105,6 @@ public class ImpMatchApiService implements IntMatchApiService {
         throw new ServiceException("El valor de summonerId no puede ser null o vacío.");
       }
 
-      if (!CommonFunctions.isNotNullOrEmpty(apiKey)) {
-        initApiKey();
-      }
-
       liveMatchDTO = webClient.get()
               .uri(URIs.URI_LOL_LIVE_MATCH.concat(summonerId))
               .header("X-Riot-Token", this.apiKey)
@@ -135,45 +122,83 @@ public class ImpMatchApiService implements IntMatchApiService {
     return liveMatchDTO;
   }
 
+    /**
+     * Searches a live match given a summoner name.
+     * Fot that, it's necessary the summoner id, so first do this calling riot's API.
+     * Then, calls riot's API to get the live match info. But this endpoint returns poor data,
+     * so values like champion, summoner level, etc. needs to be fill calling other endpoints.
+     * In this case, all champions are stored in the database, so it's not necessary to call
+     * the respective API.
+     * @param sumName summoner name.
+     * @return no blocking data.
+     */
   @Override
   public Mono<MatchDTO> getSummonerLiveMatch(String sumName) {
-
-    if (!CommonFunctions.isNotNullOrEmpty(apiKey) || webClient == null) {
-      initApiKey();
-      logger.info("apikey and webClient initialized.".concat(sumName));
-    }
-
-    String url = URIs.URI_SUMMONER_ACCOUNT_NAME.concat(sumName);
-    logger.info("Start champion api request with ".concat(sumName));
-    return webClient.get()
-            .uri(url)
-            .header("X-Riot-Token", this.apiKey)
-            .retrieve()
-            .bodyToMono(SummonerDTO.class)
+    return summonerApiService.getSummonerByNameMono(sumName)
             .flatMap(summonerDTO -> {
-              String liveMatchUrl = URIs.URI_LOL_LIVE_MATCH.concat(summonerDTO.getSummonerId());
-              logger.info("Start live match api request with ".concat(sumName));
-              return webClient.get()
-                      .uri(liveMatchUrl)
-                      .header("X-Riot-Token", this.apiKey)
-                      .retrieve()
-                      .bodyToMono(LiveMatchRootDTO.class)
-                      .map(liveMatchDTO -> {
-                        MatchDTO matchDTO = new MatchDTO();
-                        matchDTO.setMode(liveMatchDTO.getMode());
-                        matchDTO.setStartTime(CommonFunctions.getDateAsString(liveMatchDTO.getStartTime()));
-                        matchDTO.setDuration(CommonFunctions.getDurationMMssAsString(liveMatchDTO.getDuration()));
-                        matchDTO.setParticipants(getListParticipantsInfo(liveMatchDTO.getParticipants()));
-                        logger.info("Live match mapped and returning for ".concat(sumName));
-                        return matchDTO;
-                      })
-                      .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.empty());
+                logger.info("Start live match api request with ".concat(sumName));
+                return getLiveMatchBySummonerIdMono(summonerDTO.getSummonerId())
+                        .flatMap(this::mapLiveMatchToMatchDTOMono)
+                        .onErrorResume(error -> {
+                            logger.error("An error has ocurred getting liveMatch: " + error.getMessage());
+                            return Mono.empty();
+                        })
+                        .switchIfEmpty(Mono.empty());
+            })
+            .onErrorResume(error -> {
+                logger.error("An error has ocurred getting summonerDTO: " +error.getMessage());
+                return Mono.empty();
             })
             .switchIfEmpty(Mono.empty());
   }
 
-  private List<ParticipantInfoDTO> getListParticipantsInfo(ArrayList<ParticipantDTO> participants) {
+    /**
+     * Searches a live match given summoner id. It produces a reactive result (no blocking).
+     * @param summonerId summonerId
+     * @return Mono
+     */
+  public Mono<LiveMatchRootDTO> getLiveMatchBySummonerIdMono(String summonerId) {
+      String liveMatchUrl = URIs.URI_LOL_LIVE_MATCH.concat(summonerId);
+      return webClient.get()
+              .uri(liveMatchUrl)
+              .header("X-Riot-Token", this.apiKey)
+              .retrieve()
+              .bodyToMono(LiveMatchRootDTO.class)
+              .onErrorResume(err -> {
+                  logger.error("An error has occurred getting liveMatch: " + err.getMessage());
+                  return Mono.empty();
+              });
 
+  }
+
+    /**
+     * Maps liveMatchDTO object into MatchDTO, and returns non-blocking data
+     * @param liveMatchDTO liveMatch
+     * @return Mono data.
+     */
+  private Mono<MatchDTO> mapLiveMatchToMatchDTOMono(LiveMatchRootDTO liveMatchDTO) {
+      Mono<List<ParticipantInfoDTO>> participantsInfoDTOMono = getListParticipantsInfo(liveMatchDTO.getParticipants());
+      MatchDTO matchDTO = new MatchDTO();
+      matchDTO.setMode(liveMatchDTO.getMode());
+      matchDTO.setStartTime(CommonFunctions.getDateAsString(liveMatchDTO.getStartTime()));
+      matchDTO.setDuration(CommonFunctions.getDurationMMssAsString(liveMatchDTO.getDuration()));
+
+      return participantsInfoDTOMono.map(participantsInfoDTOList -> {
+          matchDTO.setParticipants(participantsInfoDTOList);
+          logger.info("Live match ("+liveMatchDTO.getMatchId()+") mapped successfully");
+          return matchDTO;
+      });
+  }
+
+    /**
+     * Given the fact that liveMatch endpoint provides just the ids of champions, spells, and poor info about summoners,
+     * it's necessary to complete values like summoner level, spells names, etc. making queries
+     * o calling riot's API.
+     * The result is non-blocking
+     * @param participants list of participants in the liveMatch
+     * @return Mono
+     */
+  private Mono<List<ParticipantInfoDTO>> getListParticipantsInfo(ArrayList<ParticipantDTO> participants) {
     Map<Long, String> champions = championService.findByKeyIn(participants.stream()
                     .map(ParticipantDTO::getChampionId)
                     .toList())
@@ -186,36 +211,35 @@ public class ImpMatchApiService implements IntMatchApiService {
             .stream()
             .collect(Collectors.toMap(Spell::getSpellId, Spell::getEmoji));
 
-//    Mono<List<SummonerDTO>> summoners = summonerApiService.findMatchSummonersByName(participants.stream()
-//            .map(ParticipantDTO::getSummonerName)
-//            .toList());
-//
-//    summoners.subscribe(s -> logger.info("summoners list size="+s.size()));
+    Flux<SummonerDTO> summoners = summonerApiService.findMatchSummonersByName(participants.stream()
+            .map(ParticipantDTO::getSummonerName)
+            .toList());
 
+    Flux<ParticipantDTO> participantDTOFlux = Flux.fromIterable(participants);
 
-    return participants.stream()
-            .map(participant -> {
-              ParticipantInfoDTO p = mapper.map(participant, ParticipantInfoDTO.class);
-              if (p.getChampionName() == null) {
-                p.setChampionName(champions.get(participant.getChampionId()));
-              }
+    Flux<ParticipantInfoDTO> resultFlux = Flux.zip(participantDTOFlux, summoners) // here the magic appears
+            .map(res -> this.completeParticipantInfoDTO(res, champions, spells));
 
-              if (participant.getSpell1Id() != null && participant.getSpell2Id() != null) {
-                p.setSpell1Emoji(spells.get(participant.getSpell1Id()));
-                p.setSpell2Emoji(spells.get(participant.getSpell2Id()));
-              }
-              return p;
-            })
-            .toList();
+    return resultFlux.collectList();
+
   }
 
-  private void initApiKey() {
-    this.webClient = WebClient.create();
-    Optional<RiotApi> riotApi = this.intRiotApi.findById(1L);
-    apiKey = riotApi.map(RiotApi::getApiKey).orElse(null);
-    if (apiKey == null) {
-      throw new ServiceException(ConstantsExceptions.ERROR_RIOT_API_KEY_NOT_FOUNT);
-    }
+  private ParticipantInfoDTO completeParticipantInfoDTO(Tuple2<ParticipantDTO, SummonerDTO> res, Map<Long, String> champions, Map<Integer, String> spells) {
+      ParticipantDTO participantDTO = res.getT1();
+      SummonerDTO summonerDTO = res.getT2();
+      ParticipantInfoDTO participantInfoDTO = mapper.map(participantDTO, ParticipantInfoDTO.class);
+
+      if (participantInfoDTO.getChampionName() == null) {
+          participantInfoDTO.setChampionName(champions.get(participantDTO.getChampionId()));
+      }
+
+      if (participantDTO.getSpell1Id() != null && participantDTO.getSpell2Id() != null) {
+          participantInfoDTO.setSpell1Emoji(spells.get(participantDTO.getSpell1Id()));
+          participantInfoDTO.setSpell2Emoji(spells.get(participantDTO.getSpell2Id()));
+      }
+
+      participantInfoDTO.setSummonerLevel(summonerDTO.getSummonerLevel());
+      return participantInfoDTO;
   }
 
   public String buildDynamicURL(String puuid, MatchFilter filter) {

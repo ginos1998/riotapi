@@ -1,5 +1,6 @@
 package riot.riotapi.services.interfaces;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import riot.riotapi.dtos.SummonerDTO;
 
@@ -9,5 +10,6 @@ public interface IntSummonerApiService {
   List<SummonerDTO> getSummonerByName(String name);
   List<SummonerDTO> getSummonerByAccountId(String accountId);
   List<SummonerDTO> getSummonerByPuuid(String puuid);
-  Mono<List<SummonerDTO>> findMatchSummonersByName(List<String> summonersNames);
+  Flux<SummonerDTO> findMatchSummonersByName(List<String> summonersNames);
+  Mono<SummonerDTO> getSummonerByNameMono(String sumName);
 }

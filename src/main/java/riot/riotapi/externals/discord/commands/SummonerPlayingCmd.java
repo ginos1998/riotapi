@@ -64,7 +64,11 @@ public class SummonerPlayingCmd implements SlashCommand {
                                             createTeamEmbed(blueTeamParticipants, Color.BLUE))
                                 .timeout(Duration.ofSeconds(5));
                     })
-                    .timeout(Duration.ofSeconds(6))
+                    .timeout(Duration.ofSeconds(8))
+                    .onErrorResume(err -> {
+                        logger.error(err.getMessage());
+                        return Mono.empty();
+                    })
                     .switchIfEmpty(Mono.defer(() -> {
                         logger.debug("No live match found. Returning default embed.");
                         return event.reply()
@@ -100,9 +104,9 @@ public class SummonerPlayingCmd implements SlashCommand {
         for(ParticipantInfoDTO match: teamParticipants) {
             String quote = ((line) %2 == 0) ? "- " : " ";
             String lineColor = ((line++) %2 == 0) ? startWith : "```md\n";
-            summoners.append(lineColor).append(quote).append(match.getSummonerName()).append('\n').append("```");
-            champions.append(lineColor).append(quote).append(match.getChampionName()).append("\n```");
-            spells.append('\n').append(match.getSpell1Emoji()).append("  ").append(match.getSpell2Emoji()).append('\n');
+            summoners.append(lineColor).append(quote).append(match.getSummonerName()).append('\n').append(match.getSummonerLevel()).append('\n').append("```");
+            champions.append(lineColor).append(quote).append(match.getChampionName()).append("\n ").append("\n```");
+            spells.append('\n').append(match.getSpell1Emoji()).append("  ").append(match.getSpell2Emoji()).append("\n\n");
         }
         return EmbedCreateSpec.builder()
                 .color(teamColor)
@@ -117,7 +121,8 @@ public class SummonerPlayingCmd implements SlashCommand {
                 .color(Color.YELLOW)
                 .author("League Of Trolls", URLs.URL_LoT_REPO , URLs.ICON_LoT_BOT)
                 .title("UPS! Not found")
-                .description("The summoner ".concat(sumName).concat(" is not playing any match."))
+                .description("The summoner ".concat(sumName).concat(" is not playing any match :face_with_monocle:"))
+                .footer("If you think this is an error, type /about to get support info.", URLs.ICON_THINKING_EMOJI)
                 .build();
     }
 }
