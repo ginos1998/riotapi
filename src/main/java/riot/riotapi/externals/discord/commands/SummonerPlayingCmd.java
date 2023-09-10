@@ -1,5 +1,6 @@
 package riot.riotapi.externals.discord.commands;
 
+import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
@@ -38,14 +39,20 @@ public class SummonerPlayingCmd implements SlashCommand {
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
         try {
+
             String name = event.getOption("name")
                     .flatMap(ApplicationCommandInteractionOption::getValue)
                     .map(ApplicationCommandInteractionOptionValue::asString)
                     .orElseThrow();
 
-            Mono<MatchDTO> liveMatch = this.matchController.getSummonerLiveMatch(name);
+            Mono<MatchDTO> liveMatchMono = event.getInteraction()
+                    .getGuild()
+                    .flatMap(guild -> {
+                                Snowflake guildId = guild.getId();
+                                return this.matchController.getSummonerLiveMatch(name, guildId.asString());
+                            });
 
-            return liveMatch.flatMap(match -> {
+            return liveMatchMono.flatMap(match -> {
                         logger.debug("Start creating embed message.");
                         List<ParticipantInfoDTO> redTeamParticipants = match.getParticipants().stream()
                                 .filter(participant -> participant.getTeamId() == 200)
@@ -98,20 +105,23 @@ public class SummonerPlayingCmd implements SlashCommand {
     private EmbedCreateSpec createTeamEmbed(List<ParticipantInfoDTO> teamParticipants, Color teamColor) {
         StringBuilder summoners = new StringBuilder();
         StringBuilder champions = new StringBuilder();
-        StringBuilder spells = new StringBuilder(". ");
+        StringBuilder spells = new StringBuilder();
         int line = 0;
         String startWith = teamColor.equals(Color.RED) ? "```diff\n" : "```fix\n";
         for(ParticipantInfoDTO match: teamParticipants) {
             String quote = ((line) %2 == 0) ? "- " : " ";
             String lineColor = ((line++) %2 == 0) ? startWith : "```md\n";
-            summoners.append(lineColor).append(quote).append(match.getSummonerName()).append('\n').append(match.getSummonerLevel()).append('\n').append("```");
-            champions.append(lineColor).append(quote).append(match.getChampionName()).append("\n ").append("\n```");
-            spells.append('\n').append(match.getSpell1Emoji()).append("  ").append(match.getSpell2Emoji()).append("\n\n");
+//            champions.append(lineColor).append(quote).append(match.getChampionName()).append("\n ").append("\n```");
+            champions.append(match.getChampionEmoji()).append(" ").append(match.getChampionName()).append("\nMadera").append('\n');
+//            summoners.append(lineColor).append(quote).append(match.getSummonerName()).append('\n').append(match.getSummonerLevel()).append('\n').append("```");
+            summoners.append(match.getSummonerName()).append("\nLvl ").append(match.getSummonerLevel()).append('\n');
+//            spells.append('\n').append(match.getSpell1Emoji()).append("  ").append(match.getSpell2Emoji()).append("\n\n");
+            spells.append(match.getSpell1Emoji()).append("  ").append(match.getSpell2Emoji()).append("\n zzz \n");
         }
         return EmbedCreateSpec.builder()
                 .color(teamColor)
-                .addField("Summoner", summoners.toString(), true)
                 .addField("Champion", champions.toString(), true)
+                .addField("Summoner", summoners.toString(), true)
                 .addField("Spells", spells.toString(), true)
                 .build();
     }

@@ -10,4 +10,6 @@ public class URLs {
     // Discord
     public static final String DS_GET_GUILD_EMOJIS = "https://discord.com/api/v10/guilds/%s/emojis";
     public static final String DS_POST_GUILD_EMOJI = "https://discord.com/api/v10/guilds/%s/emojis";
+    public static final String DS_DELETE_GUILD_EMOJI = "https://discord.com/api/v10/guilds/%s/emojis/%s";
+
 }

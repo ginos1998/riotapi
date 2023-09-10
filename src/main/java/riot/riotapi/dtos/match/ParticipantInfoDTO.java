@@ -14,6 +14,7 @@ public class ParticipantInfoDTO {
     private int summonerLevel;
     @JsonView({CommonView.HistoryView.class, CommonView.LiveView.class})
     private String championName;
+    private String championEmoji;
     @JsonView(CommonView.HistoryView.class)
     private String lane;
     @JsonView(CommonView.HistoryView.class)

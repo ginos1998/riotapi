@@ -12,5 +12,5 @@ public interface IntMatchApiService {
   MatchesDTO getSummonerMatchesByPuuid(Summoner summoner, MatchFilter filter);
   MatchRootDTO getMatchById(String matchId);
   LiveMatchRootDTO getCurrentMatchInfo(String summonerId);
-  Mono<MatchDTO> getSummonerLiveMatch(String sumName);
+  Mono<MatchDTO> getSummonerLiveMatch(String sumName, String guildId);
 }

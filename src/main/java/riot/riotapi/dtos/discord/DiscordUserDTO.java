@@ -1,9 +1,9 @@
-package riot.riotapi.externals.discord.models.dtos;
+package riot.riotapi.dtos.discord;
 
 import lombok.Data;
 
 @Data
-public class DiscordUser {
+public class DiscordUserDTO {
     private String id;
     private String username;
     private String avatar;
