@@ -33,6 +33,7 @@ public class GuildEmojiController {
 
     @DeleteMapping("/delete-emoji-all")
     public Mono<Void> deleteEmojiAll(@RequestParam String guildId) {
-        return this.emojiDelegator.deleteEmojiAll(guildId);
+        return this.emojiDelegator.deleteEmojiAll(guildId)
+                .onErrorComplete();
     }
 }

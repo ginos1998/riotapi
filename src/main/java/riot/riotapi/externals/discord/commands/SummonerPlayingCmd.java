@@ -11,7 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import riot.riotapi.controllers.api.MatchApiController;
+import riot.riotapi.controllers.discord.GuildEmojiController;
 import riot.riotapi.dtos.match.MatchDTO;
 import riot.riotapi.dtos.match.ParticipantInfoDTO;
 import riot.riotapi.exceptions.DiscordException;
@@ -26,9 +28,11 @@ public class SummonerPlayingCmd implements SlashCommand {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final MatchApiController matchController;
+    private final GuildEmojiController guildEmojiController;
     @Autowired
-    public SummonerPlayingCmd(MatchApiController matchController) {
+    public SummonerPlayingCmd(MatchApiController matchController, GuildEmojiController guildEmojiController) {
         this.matchController = matchController;
+        this.guildEmojiController = guildEmojiController;
     }
 
     @Override
@@ -83,12 +87,22 @@ public class SummonerPlayingCmd implements SlashCommand {
                                                             .withEmbeds(notPlayingEmbed(name))
                                                             .then();
                     }
-                    ));
+                    ))
+                    .publishOn(Schedulers.boundedElastic())
+                    .doAfterTerminate(() -> event.getInteraction()
+                            .getGuild().map(g -> deleteEmojisAll(g.getId().asString()))
+                            .block() // the embed message has been returned so blocking don't affect.
+                    );
 
         } catch (DiscordException de) {
             logger.error("Ha ocurrido un error al ejecutar el comando ".concat(getName()));
             throw new DiscordException("Ha ocurrido un error al ejecutar el comando ".concat(getName()));
         }
+    }
+
+    private Mono<Void> deleteEmojisAll(String gid) {
+        return this.guildEmojiController.deleteEmojiAll(gid)
+                .onErrorComplete();
     }
 
     private EmbedCreateSpec headerEmbed(String sumName, String mode) {

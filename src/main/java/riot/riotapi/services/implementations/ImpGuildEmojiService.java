@@ -10,6 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import riot.riotapi.dtos.discord.GuildEmojiDTO;
+import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.externals.discord.utils.URLs;
 import riot.riotapi.services.interfaces.IntGuildEmojiService;
 
@@ -71,29 +72,35 @@ public class ImpGuildEmojiService implements IntGuildEmojiService {
     }
 
     public Mono<Void> deleteEmojiAll(String guildId) {
-        String headerName = "Authorization";
-        String apiKey = "Bot ".concat(token);
-        logger.info("Start getting emojis from guild " + guildId);
+        try {
+            String headerName = "Authorization";
+            String apiKey = "Bot ".concat(token);
+            logger.info("Start getting emojis from guild " + guildId);
 
-        return webClient.get()
-                .uri(String.format(URLs.DS_GET_GUILD_EMOJIS, guildId))
-                .header(headerName, apiKey)
-                .header("Content-Type", "application/json")
-                .retrieve()
-                .bodyToFlux(GuildEmojiDTO.class)
-                .flatMap(emoji -> {
-                    if (!emoji.getName().equals(EMOJI_LOT)) {
-                        logger.info("Deleting " + emoji.getName() + " " + emoji.getId());
-                        return webClient.delete()
-                                .uri(String.format(URLs.DS_DELETE_GUILD_EMOJI, guildId, emoji.getId()))
-                                .header(headerName, apiKey)
-                                .header("Content-Type", "application/json")
-                                .retrieve()
-                                .bodyToMono(Void.class);
-                    }
-                    return Mono.empty();
-                })
-                .then();
+            return webClient.get()
+                    .uri(String.format(URLs.DS_GET_GUILD_EMOJIS, guildId))
+                    .header(headerName, apiKey)
+                    .header("Content-Type", "application/json")
+                    .retrieve()
+                    .bodyToFlux(GuildEmojiDTO.class)
+                    .flatMap(emoji -> {
+                        if (!emoji.getName().equals(EMOJI_LOT)) {
+                            logger.info("Deleting " + emoji.getName() + " " + emoji.getId());
+                            return webClient.delete()
+                                    .uri(String.format(URLs.DS_DELETE_GUILD_EMOJI, guildId, emoji.getId()))
+                                    .header(headerName, apiKey)
+                                    .header("Content-Type", "application/json")
+                                    .retrieve()
+                                    .bodyToMono(Void.class);
+                        }
+                        return Mono.empty();
+                    })
+                    .doOnError(e -> logger.error("An error has occurred deleting all emojis on guild " + guildId + ": " + e.getMessage()))
+                    .then();
+        } catch (Exception e) {
+            logger.error("An error has occurred deleting all emojis on guild " + guildId + ": " + e.getMessage());
+            throw new ServiceException("An error has occurred deleting all emojis on guild " + guildId + ": " + e.getMessage(), e);
+        }
 
     }
 
