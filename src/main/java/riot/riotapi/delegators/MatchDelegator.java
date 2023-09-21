@@ -162,4 +162,12 @@ public class MatchDelegator {
   public Mono<MatchDTO> getSummonerLiveMatch(String sumName) {
     return matchApiService.getSummonerLiveMatch(sumName);
   }
+
+  public Mono<MatchDTO> getCurrentMatchPremadeTeam(String sumName) {
+    // return matchApiService.getCurrentMatchPremadeTeam(sumName);
+  }
+
+
+
+
 }

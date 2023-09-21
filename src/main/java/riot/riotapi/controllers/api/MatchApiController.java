@@ -117,4 +117,17 @@ public class MatchApiController {
     return matchDelegator.getSummonerLiveMatch(sumName);
   }
 
+  @GetMapping("/current-match/{sumName}/premade")
+  @ApiOperation(value = "Obtiene datos de una partida en juego.", response = MatchesDTO.class, responseContainer = "dto", produces = "application/json")
+  @ApiResponses(value = {
+          @ApiResponse(code = 200, message = "Devuelve un dto con datos de una partida en juego."),
+          @ApiResponse(code = 204, message = "No existe partida en juego para el sumName dado."),
+          @ApiResponse(code = 500, message = "Ha ocurrido un error inesperado.")
+
+  })
+  @JsonView(CommonView.LiveView.class)
+  public Mono<MatchDTO> getCurrentMatchPremadeTeam(@PathVariable String sumName) {
+    return matchDelegator.getCurrentMatchPremadeTeam(sumName);
+  }
+
 }
