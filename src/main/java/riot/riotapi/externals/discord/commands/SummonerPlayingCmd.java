@@ -11,12 +11,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 import riot.riotapi.controllers.api.MatchApiController;
 import riot.riotapi.controllers.discord.GuildEmojiController;
 import riot.riotapi.dtos.match.MatchDTO;
 import riot.riotapi.dtos.match.ParticipantInfoDTO;
-import riot.riotapi.exceptions.DiscordException;
 import riot.riotapi.externals.discord.utils.URLs;
 
 import java.time.Duration;
@@ -52,9 +51,9 @@ public class SummonerPlayingCmd implements SlashCommand {
             Mono<MatchDTO> liveMatchMono = event.getInteraction()
                     .getGuild()
                     .flatMap(guild -> {
-                                Snowflake guildId = guild.getId();
-                                return this.matchController.getSummonerLiveMatch(name, guildId.asString());
-                            });
+                        Snowflake guildId = guild.getId();
+                        return this.matchController.getSummonerLiveMatch(name, guildId.asString());
+                    });
 
             return liveMatchMono.flatMap(match -> {
                         logger.debug("Start creating embed message.");
@@ -68,35 +67,37 @@ public class SummonerPlayingCmd implements SlashCommand {
 
                         String mode = match.getMode();
 
-                        return  event.reply()
+                        return event.reply()
                                 .withEphemeral(false)
                                 .withEmbeds(headerEmbed(name, mode),
-                                            createTeamEmbed(redTeamParticipants, Color.RED),
-                                            createTeamEmbed(blueTeamParticipants, Color.BLUE))
-                                .timeout(Duration.ofSeconds(5))
+                                        createTeamEmbed(redTeamParticipants, Color.RED),
+                                        createTeamEmbed(blueTeamParticipants, Color.BLUE))
+                                .timeout(Duration.ofSeconds(8))
                                 .then(Mono.defer(() -> deleteEmojisAll(event.getInteraction().getGuildId().orElseThrow().asString())))
                                 .onErrorResume(err -> {
-                                    logger.error("ups:" + err.getMessage());
-                                    return Mono.empty();
-                                });
+                                    logger.error("Error retornando mensaje:" + err.getMessage());
+                                    return deleteEmojisAll(event.getInteraction().getGuildId().orElseThrow().asString());
+                                })
+                                .retryWhen(Retry.max(2L));
                     })
-                    .timeout(Duration.ofSeconds(8))
+                    .timeout(Duration.ofSeconds(10))
+                    .retryWhen(Retry.max(2L))
                     .onErrorResume(err -> {
-                        logger.error(err.getMessage());
+                        logger.error("Error on liveMatchMono.flatMap: " + err.getMessage());
                         return Mono.empty();
                     })
                     .switchIfEmpty(Mono.defer(() -> {
-                        logger.debug("No live match found. Returning default embed.");
-                        return event.reply()
-                                                            .withEphemeral(false)
-                                                            .withEmbeds(notPlayingEmbed(name))
-                                                            .then();
-                    }
+                                logger.debug("No live match found. Returning default embed.");
+                                return event.reply()
+                                        .withEphemeral(false)
+                                        .withEmbeds(notPlayingEmbed(name))
+                                        .then();
+                            }
                     ));
 
-        } catch (DiscordException de) {
-            logger.error("Ha ocurrido un error al ejecutar el comando ".concat(getName()));
-            throw new DiscordException("Ha ocurrido un error al ejecutar el comando ".concat(getName()));
+        } catch (Exception ce) {
+            logger.error("Ha ocurrido un error en el handler de " + SummonerPlayingCmd.class.getName() + ": " + ce.getMessage());
+            return Mono.empty();
         }
     }
 

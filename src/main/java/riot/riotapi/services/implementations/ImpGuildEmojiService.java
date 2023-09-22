@@ -48,7 +48,8 @@ public class ImpGuildEmojiService implements IntGuildEmojiService {
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject dictionary = jsonArray.getJSONObject(i);
             if (champName.equalsIgnoreCase(dictionary.get("name").toString())
-                || champName.replace(" ", "_").equalsIgnoreCase(dictionary.get("name").toString())) {
+                || champName.replace(" ", "_").equalsIgnoreCase(dictionary.get("name").toString())
+                || champName.replace("'", "_").equalsIgnoreCase(dictionary.get("name").toString())) {
                 return createEmojiAtGivenGuild(dictionary, guildId);
             }
         }
@@ -187,14 +188,21 @@ public class ImpGuildEmojiService implements IntGuildEmojiService {
             String jsonBody = jsonObject.toString();
             String headerName = "Authorization";
             String apiKey = "Bot ".concat(token);
-            // logger.info("Creating emoji to guild " + guildId + "with body " + jsonBody);
             return webClient.post()
                     .uri(String.format(URLs.DS_POST_GUILD_EMOJI, guildId))
                     .header(headerName, apiKey)
                     .header("Content-Type", "application/json")
                     .bodyValue(jsonBody)
-                    .exchangeToMono(clientResponse -> clientResponse.bodyToMono(GuildEmojiDTO.class))
-                    .doOnNext(e -> logger.info("At guild "+guildId+" created " + e.getName()))
+                    .exchangeToMono(clientResponse -> {
+                        if (clientResponse.statusCode().is2xxSuccessful()) {
+                            return clientResponse.bodyToMono(GuildEmojiDTO.class)
+                                    .doOnNext(e -> logger.info("At guild " + guildId + " created " + e.getName()));
+                        } else {
+                            logger.error("An error has occurred posting emojis to guild " + guildId + ". ERROR: " + clientResponse.statusCode());
+                            return clientResponse.bodyToMono(GuildEmojiDTO.class);
+                        }
+
+                    })
                     .onErrorResume(err -> {
                         logger.error("An error has occurred posting emojis to guild " + guildId);
                         return Mono.empty();
