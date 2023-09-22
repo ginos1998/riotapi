@@ -93,11 +93,6 @@ public class SummonerPlayingCmd implements SlashCommand {
                                                             .then();
                     }
                     ));
-//                    .publishOn(Schedulers.boundedElastic())
-//                    .doAfterTerminate(() -> event.getInteraction()
-//                            .getGuild().map(g -> deleteEmojisAll(g.getId().asString()))
-//                            .block() // the embed message has been returned so blocking don't affect.
-//                    );
 
         } catch (DiscordException de) {
             logger.error("Ha ocurrido un error al ejecutar el comando ".concat(getName()));
