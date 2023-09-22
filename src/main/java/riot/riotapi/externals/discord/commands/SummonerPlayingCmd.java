@@ -73,7 +73,12 @@ public class SummonerPlayingCmd implements SlashCommand {
                                 .withEmbeds(headerEmbed(name, mode),
                                             createTeamEmbed(redTeamParticipants, Color.RED),
                                             createTeamEmbed(blueTeamParticipants, Color.BLUE))
-                                .timeout(Duration.ofSeconds(5));
+                                .timeout(Duration.ofSeconds(5))
+                                .then(Mono.defer(() -> deleteEmojisAll(event.getInteraction().getGuildId().orElseThrow().asString())))
+                                .onErrorResume(err -> {
+                                    logger.error("ups:" + err.getMessage());
+                                    return Mono.empty();
+                                });
                     })
                     .timeout(Duration.ofSeconds(8))
                     .onErrorResume(err -> {
@@ -87,12 +92,12 @@ public class SummonerPlayingCmd implements SlashCommand {
                                                             .withEmbeds(notPlayingEmbed(name))
                                                             .then();
                     }
-                    ))
-                    .publishOn(Schedulers.boundedElastic())
-                    .doAfterTerminate(() -> event.getInteraction()
-                            .getGuild().map(g -> deleteEmojisAll(g.getId().asString()))
-                            .block() // the embed message has been returned so blocking don't affect.
-                    );
+                    ));
+//                    .publishOn(Schedulers.boundedElastic())
+//                    .doAfterTerminate(() -> event.getInteraction()
+//                            .getGuild().map(g -> deleteEmojisAll(g.getId().asString()))
+//                            .block() // the embed message has been returned so blocking don't affect.
+//                    );
 
         } catch (DiscordException de) {
             logger.error("Ha ocurrido un error al ejecutar el comando ".concat(getName()));
@@ -101,6 +106,7 @@ public class SummonerPlayingCmd implements SlashCommand {
     }
 
     private Mono<Void> deleteEmojisAll(String gid) {
+        logger.info("Deleting all emojis on guild " + gid);
         return this.guildEmojiController.deleteEmojiAll(gid)
                 .onErrorComplete();
     }
