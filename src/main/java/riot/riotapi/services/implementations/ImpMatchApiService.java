@@ -24,10 +24,7 @@ import riot.riotapi.services.interfaces.IntGuildEmojiService;
 import riot.riotapi.services.interfaces.IntMatchApiService;
 import riot.riotapi.services.interfaces.IntSpellService;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
-import riot.riotapi.utils.CommonFunctions;
-import riot.riotapi.utils.Constants;
-import riot.riotapi.utils.ConstantsExceptions;
-import riot.riotapi.utils.URIs;
+import riot.riotapi.utils.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -190,7 +187,7 @@ public class ImpMatchApiService implements IntMatchApiService {
 
       return participantsInfoDTOMono.map(participantsInfoDTOList -> {
           matchDTO.setParticipants(participantsInfoDTOList);
-          logger.info("Live match ("+liveMatchDTO.getMatchId()+") mapped successfully");
+          logger.info("Live match (id="+liveMatchDTO.getMatchId()+") has been mapped");
           return matchDTO;
       });
   }
@@ -208,8 +205,6 @@ public class ImpMatchApiService implements IntMatchApiService {
                                                                             .map(ParticipantDTO::getChampionId)
                                                                             .toList());
 
-//    logger.info("championList:" + championList.stream().map(Champion::getName).toList());
-
     Map<Long, String> championsMap = championList.stream()
                                                 .collect(Collectors.toMap(Champion::getKey, Champion::getName));
 
@@ -226,10 +221,8 @@ public class ImpMatchApiService implements IntMatchApiService {
     Flux<SummonerDTO> summoners = summonerApiService.findMatchSummonersByName(participants.stream()
             .map(ParticipantDTO::getSummonerName)
             .toList());
-//            .doOnNext(s -> logger.info("sum " + s.getName()));
 
     Flux<ParticipantDTO> participantDTOFlux = Flux.fromIterable(participants);
-//            .doOnNext(c -> logger.info("participant " + c.getSummonerName() + "with champ " + c.getChampionName()));
 
     Flux<ParticipantInfoDTO> resultFlux = Flux.zip(participantDTOFlux, summoners, champEmoji) // here the magic appears
             .map(res -> this.completeParticipantInfoDTO(res, championsMap, spells));
@@ -242,14 +235,8 @@ public class ImpMatchApiService implements IntMatchApiService {
       ParticipantDTO participantDTO = res.getT1();
       SummonerDTO summonerDTO = res.getT2();
       GuildEmojiDTO emoji = res.getT3();
-      String discordEmojiFormat;
 
       ParticipantInfoDTO participantInfoDTO = mapper.map(participantDTO, ParticipantInfoDTO.class);
-
-      discordEmojiFormat= String.format("<:%s:%s>", emoji.getName(), emoji.getId());
-      if (emoji.getName() == null || emoji.getId() == null) {
-          discordEmojiFormat = String.format("<:%s:%s>", "lot", "1145530242090414250");
-      }
 
       if (participantInfoDTO.getChampionName() == null) {
           participantInfoDTO.setChampionName(championsMap.get(participantDTO.getChampionId()));
@@ -261,8 +248,7 @@ public class ImpMatchApiService implements IntMatchApiService {
       }
 
       participantInfoDTO.setSummonerLevel(summonerDTO.getSummonerLevel());
-      participantInfoDTO.setChampionEmoji(discordEmojiFormat);
-//      logger.info("zipped champ " + participantInfoDTO.getChampionName() + " with emoji " + emoji.getName());
+      participantInfoDTO.setChampionEmoji(DiscordUtils.formatDiscordEmoji(emoji.getName(), emoji.getId()));
       return participantInfoDTO;
   }
 

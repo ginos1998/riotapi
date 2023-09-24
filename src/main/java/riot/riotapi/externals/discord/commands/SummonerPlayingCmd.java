@@ -17,6 +17,7 @@ import riot.riotapi.controllers.discord.GuildEmojiController;
 import riot.riotapi.dtos.match.MatchDTO;
 import riot.riotapi.dtos.match.ParticipantInfoDTO;
 import riot.riotapi.externals.discord.utils.URLs;
+import riot.riotapi.utils.DiscordUtils;
 
 import java.time.Duration;
 import java.util.List;
@@ -56,7 +57,7 @@ public class SummonerPlayingCmd implements SlashCommand {
                     });
 
             return liveMatchMono.flatMap(match -> {
-                        logger.debug("Start creating embed message.");
+                        normalizeChampionsEmojis(match.getParticipants());
                         List<ParticipantInfoDTO> redTeamParticipants = match.getParticipants().stream()
                                 .filter(participant -> participant.getTeamId() == 200)
                                 .toList();
@@ -102,8 +103,9 @@ public class SummonerPlayingCmd implements SlashCommand {
     }
 
     private Mono<Void> deleteEmojisAll(String gid) {
-        logger.info("Deleting all emojis on guild " + gid);
+        logger.info("Deleting all emojis on guild " + gid + "..");
         return this.guildEmojiController.deleteEmojiAll(gid)
+                //.doAfterTerminate(() -> logger.info("All emojis have been deleted on guild " + gid))
                 .onErrorComplete();
     }
 
@@ -140,6 +142,20 @@ public class SummonerPlayingCmd implements SlashCommand {
                 .addField("Summoner", summoners.toString(), true)
                 .addField("Spells", spells.toString(), true)
                 .build();
+    }
+
+    private void normalizeChampionsEmojis(List<ParticipantInfoDTO> teamParticipants) {
+        for(ParticipantInfoDTO match: teamParticipants) {
+            String emojiName = DiscordUtils.decodeEmoji(match.getChampionEmoji());
+            if (!emojiName.equalsIgnoreCase(match.getChampionName().replace(" ", "_"))) {
+                for (ParticipantInfoDTO aux: teamParticipants) {
+                    if (aux.getChampionName().replace(" ", "_").equalsIgnoreCase(emojiName)) {
+                        match.setChampionEmoji(aux.getChampionEmoji());
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     private EmbedCreateSpec notPlayingEmbed(String sumName) {
