@@ -21,8 +21,9 @@ public class GuildEmojiDelegator {
         this.guildEmojiService = guildEmojiService;
     }
 
-    public Mono<GuildEmojiDTO> createChampionEmojiByName(String guildId, String champName) {
-        return guildEmojiService.createChampionEmojiByName(guildId, champName);
+    public Flux<GuildEmojiDTO> createChampionEmojiByName(String guildId, String champName) {
+        Flux<String> champsNamesFlux = Flux.just(champName, "zed", "sett", "vex", "ziggs", "teemo", "yasuo", "yone");
+        return guildEmojiService.createChampionEmojiByName(guildId, champsNamesFlux);
     }
 
     public Flux<GuildEmojiDTO> getEmojiAll(String guildId) {

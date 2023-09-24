@@ -44,16 +44,18 @@ public class ImpGuildEmojiService implements IntGuildEmojiService {
         }
     }
 
-    public Mono<GuildEmojiDTO> createChampionEmojiByName(String guildId, String champName) {
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject dictionary = jsonArray.getJSONObject(i);
-            if (champName.equalsIgnoreCase(dictionary.get("name").toString())
-                || champName.replace(" ", "_").equalsIgnoreCase(dictionary.get("name").toString())
-                || champName.replace("'", "_").equalsIgnoreCase(dictionary.get("name").toString())) {
-                return createEmojiAtGivenGuild(dictionary, guildId);
+    public Flux<GuildEmojiDTO> createChampionEmojiByName(String guildId, Flux<String> champsNames) {
+        return champsNames.flatMapSequential(champ -> {
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject dictionary = jsonArray.getJSONObject(i);
+                if (champ.equalsIgnoreCase(dictionary.get("name").toString())
+                        || champ.replace(" ", "_").equalsIgnoreCase(dictionary.get("name").toString())
+                        || champ.replace("'", "_").equalsIgnoreCase(dictionary.get("name").toString())) {
+                    return createEmojiAtGivenGuild(dictionary, guildId);
+                }
             }
-        }
-        return Mono.empty();
+            return Flux.empty();
+        });
     }
 
     public Flux<GuildEmojiDTO> getEmojiAll(String guildId) {

@@ -22,7 +22,7 @@ public class GuildEmojiController {
     }
 
     @PostMapping("/create-champion")
-    public Mono<GuildEmojiDTO> createChampionEmojiByName(@RequestParam String guildId, @RequestParam String champName) {
+    public Flux<GuildEmojiDTO> createChampionEmojiByName(@RequestParam String guildId, @RequestParam String champName) {
         return emojiDelegator.createChampionEmojiByName(guildId, champName);
     }
 

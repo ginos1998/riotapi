@@ -7,7 +7,7 @@ import riot.riotapi.dtos.discord.GuildEmojiDTO;
 
 public interface IntGuildEmojiService {
     Mono<GuildEmojiDTO> createsChampionEmojiAll(String guildId);
-    Mono<GuildEmojiDTO> createChampionEmojiByName(String guildId, String champName);
+    Flux<GuildEmojiDTO> createChampionEmojiByName(String guildId, Flux<String> champsNames);
 
     Flux<GuildEmojiDTO> getEmojiAll(String guildId);
     Mono<Void> deleteEmojiAll(String guildId);

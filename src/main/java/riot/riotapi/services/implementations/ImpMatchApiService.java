@@ -208,12 +208,14 @@ public class ImpMatchApiService implements IntMatchApiService {
                                                                             .map(ParticipantDTO::getChampionId)
                                                                             .toList());
 
+//    logger.info("championList:" + championList.stream().map(Champion::getName).toList());
+
     Map<Long, String> championsMap = championList.stream()
                                                 .collect(Collectors.toMap(Champion::getKey, Champion::getName));
 
     Flux<String> championsNameFlux = Flux.fromIterable(championList.stream().map(Champion::getName).toList());
 
-    Flux<GuildEmojiDTO> champEmoji = championsNameFlux.flatMap(champName -> guildEmojiService.createChampionEmojiByName(guildId, champName));
+    Flux<GuildEmojiDTO> champEmoji = guildEmojiService.createChampionEmojiByName(guildId, championsNameFlux);
 
     Map<Integer, String> spells = spellService.findSpellsByIds(participants.stream()
                     .flatMap(p -> Stream.of(p.getSpell1Id(), p.getSpell2Id()))
@@ -224,8 +226,10 @@ public class ImpMatchApiService implements IntMatchApiService {
     Flux<SummonerDTO> summoners = summonerApiService.findMatchSummonersByName(participants.stream()
             .map(ParticipantDTO::getSummonerName)
             .toList());
+//            .doOnNext(s -> logger.info("sum " + s.getName()));
 
     Flux<ParticipantDTO> participantDTOFlux = Flux.fromIterable(participants);
+//            .doOnNext(c -> logger.info("participant " + c.getSummonerName() + "with champ " + c.getChampionName()));
 
     Flux<ParticipantInfoDTO> resultFlux = Flux.zip(participantDTOFlux, summoners, champEmoji) // here the magic appears
             .map(res -> this.completeParticipantInfoDTO(res, championsMap, spells));
@@ -258,6 +262,7 @@ public class ImpMatchApiService implements IntMatchApiService {
 
       participantInfoDTO.setSummonerLevel(summonerDTO.getSummonerLevel());
       participantInfoDTO.setChampionEmoji(discordEmojiFormat);
+//      logger.info("zipped champ " + participantInfoDTO.getChampionName() + " with emoji " + emoji.getName());
       return participantInfoDTO;
   }
 
