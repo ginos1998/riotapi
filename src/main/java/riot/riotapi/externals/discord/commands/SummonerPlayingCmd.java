@@ -105,7 +105,6 @@ public class SummonerPlayingCmd implements SlashCommand {
     private Mono<Void> deleteEmojisAll(String gid) {
         logger.info("Deleting all emojis on guild " + gid + "..");
         return this.guildEmojiController.deleteEmojiAll(gid)
-                //.doAfterTerminate(() -> logger.info("All emojis have been deleted on guild " + gid))
                 .onErrorComplete();
     }
 
@@ -144,12 +143,25 @@ public class SummonerPlayingCmd implements SlashCommand {
                 .build();
     }
 
-    private void normalizeChampionsEmojis(List<ParticipantInfoDTO> teamParticipants) {
+    public void normalizeChampionsEmojis(List<ParticipantInfoDTO> teamParticipants) {
+        List<String> champsEmojis = teamParticipants.stream()
+                .map(ParticipantInfoDTO::getChampionEmoji)
+                .toList();
+
+        teamParticipants.forEach(p -> {
+            champsEmojis.forEach(ce -> {
+                String emojiName = DiscordUtils.decodeEmoji(ce);
+                if (p.getChampionName().toLowerCase().replace(" ", "_").equalsIgnoreCase(emojiName)) {
+                    p.setChampionEmoji(ce);
+                }
+            });
+        });
         for(ParticipantInfoDTO match: teamParticipants) {
             String emojiName = DiscordUtils.decodeEmoji(match.getChampionEmoji());
             if (!emojiName.equalsIgnoreCase(match.getChampionName().replace(" ", "_"))) {
                 for (ParticipantInfoDTO aux: teamParticipants) {
-                    if (aux.getChampionName().replace(" ", "_").equalsIgnoreCase(emojiName)) {
+                    String emojiAux = DiscordUtils.decodeEmoji(aux.getChampionEmoji());
+                    if (match.getChampionName().replace(" ", "_").equalsIgnoreCase(emojiAux)) {
                         match.setChampionEmoji(aux.getChampionEmoji());
                         break;
                     }
