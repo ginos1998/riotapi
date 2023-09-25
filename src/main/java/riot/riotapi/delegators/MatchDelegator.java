@@ -159,7 +159,7 @@ public class MatchDelegator {
     return sumList.get(0);
   }
 
-  public Mono<MatchDTO> getSummonerLiveMatch(String sumName) {
-    return matchApiService.getSummonerLiveMatch(sumName);
+  public Mono<MatchDTO> getSummonerLiveMatch(String sumName, String guildId) {
+    return matchApiService.getSummonerLiveMatch(sumName, guildId);
   }
 }

@@ -113,8 +113,8 @@ public class MatchApiController {
 
   @GetMapping("/live-match/{sumName}")
   @JsonView(CommonView.LiveView.class)
-  public Mono<MatchDTO> getSummonerLiveMatch(@PathVariable String sumName) {
-    return matchDelegator.getSummonerLiveMatch(sumName);
+  public Mono<MatchDTO> getSummonerLiveMatch(@PathVariable String sumName, @RequestParam(required = false) String guildId) {
+    return matchDelegator.getSummonerLiveMatch(sumName, guildId);
   }
 
 }
