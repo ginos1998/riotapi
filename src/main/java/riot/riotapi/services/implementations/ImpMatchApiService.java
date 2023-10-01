@@ -42,6 +42,7 @@ public class ImpMatchApiService implements IntMatchApiService {
   private final Logger logger = LoggerFactory.getLogger(this.getClass());
   private final IntSummonerApiService summonerApiService;
   private final IntGuildEmojiService guildEmojiService;
+  private final List<String> matchTypesList = Arrays.asList("ranked", "normal", "tourney", "tutorial");
   @Autowired
   public ImpMatchApiService(ImpChampionService championService, IntSpellService spellService, IntSummonerApiService summonerApiService,
                             IntGuildEmojiService guildEmojiService) {
@@ -61,7 +62,7 @@ public class ImpMatchApiService implements IntMatchApiService {
 
       String[] matchesList = webClient.get()
           .uri(buildDynamicURL(summoner.getPuuid(), filter))
-          .header("X-Riot-Token", this.apiKey)
+          .header(Constants.HEADER_NAME_RIOT, this.apiKey)
           .retrieve()
           .bodyToMono(String[].class).block();
 
@@ -83,7 +84,7 @@ public class ImpMatchApiService implements IntMatchApiService {
 
       matchRootDTO = webClient.get()
               .uri(URIs.URI_LOL_MATCHES_BY_MATCH_ID.concat(matchId))
-              .header("X-Riot-Token", this.apiKey)
+              .header(Constants.HEADER_NAME_RIOT, this.apiKey)
               .retrieve()
               .bodyToMono(MatchRootDTO.class)
               .block();
@@ -109,7 +110,7 @@ public class ImpMatchApiService implements IntMatchApiService {
 
       liveMatchDTO = webClient.get()
               .uri(URIs.URI_LOL_LIVE_MATCH.concat(summonerId))
-              .header("X-Riot-Token", this.apiKey)
+              .header(Constants.HEADER_NAME_RIOT, this.apiKey)
               .retrieve()
               .bodyToMono(LiveMatchRootDTO.class)
               .block();
@@ -163,7 +164,7 @@ public class ImpMatchApiService implements IntMatchApiService {
       String liveMatchUrl = URIs.URI_LOL_LIVE_MATCH.concat(summonerId);
       return webClient.get()
               .uri(liveMatchUrl)
-              .header("X-Riot-Token", this.apiKey)
+              .header(Constants.HEADER_NAME_RIOT, this.apiKey)
               .retrieve()
               .bodyToMono(LiveMatchRootDTO.class)
               .onErrorResume(err -> {
@@ -309,7 +310,7 @@ public class ImpMatchApiService implements IntMatchApiService {
     }
 
     if (CommonFunctions.isNotNullOrEmpty(filter.getType())
-            && !Constants.LIST_TYPE_OF_MATCHES.contains(filter.getType())) {
+            && !matchTypesList.contains(filter.getType())) {
       throw new ServiceException(String.format("El type %s no está permitido", filter.getType()));
     }
   }
