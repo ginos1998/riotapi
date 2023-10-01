@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import riot.riotapi.dtos.SummonerDTO;
+import riot.riotapi.dtos.summoner.SummonerTierDTO;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
 import riot.riotapi.utils.CommonFunctions;
@@ -96,7 +97,7 @@ public class ImpSummonerApiService implements IntSummonerApiService {
    */
   public Mono<SummonerDTO> getSummonerByNameMono(String sumName) {
     String url = URIs.URI_SUMMONER_ACCOUNT_NAME.concat(sumName);
-    logger.info("Start champion api request with ".concat(sumName));
+    logger.info("Start champion api request with {}", sumName);
     return webClient.get()
             .uri(url)
             .header("X-Riot-Token", this.apiKey)
@@ -106,6 +107,20 @@ public class ImpSummonerApiService implements IntSummonerApiService {
               logger.error("An error has occurred getting summoner by name (Mono): " + err.getMessage());
               return Mono.empty();
             });
+  }
+
+  @Override
+  public Flux<SummonerTierDTO> getSummonerTierFlux(String summonerId) {
+    logger.info("Start getting summoner tier with summonerId: {}", summonerId);
+    return webClient.get()
+        .uri(URIs.URI_LOL_SUMMONER_TIER.concat(summonerId))
+        .header("X-Riot-Token", this.apiKey)
+        .retrieve()
+        .bodyToFlux(SummonerTierDTO.class)
+        .onErrorResume(err -> {
+          logger.error("An error has occurred getting summoner tier with summonerId="+summonerId+": " + err.getMessage());
+          return Mono.empty();
+        });
   }
 
   /**

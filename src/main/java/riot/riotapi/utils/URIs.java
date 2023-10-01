@@ -16,5 +16,5 @@ public class URIs {
   public static final String URI_LOL_MATCHES_BY_PUUID = "https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/#/ids";
   public static final String URI_LOL_MATCHES_BY_MATCH_ID = "https://americas.api.riotgames.com/lol/match/v5/matches/";
   public static final String URI_LOL_LIVE_MATCH = "https://la2.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/";
-
+  public static final String URI_LOL_SUMMONER_TIER = "https://la2.api.riotgames.com/lol/league/v4/entries/by-summoner/";
 }

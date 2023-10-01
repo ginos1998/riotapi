@@ -1,11 +1,15 @@
 package riot.riotapi.delegators;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.match.ParticipantDTO;
 import riot.riotapi.dtos.match.ParticipantInfoDTO;
+import riot.riotapi.dtos.summoner.SummonerTierDTO;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
@@ -22,6 +26,7 @@ public class SummonerDelegador {
   private final IntSummonerService intSummonerService;
   private final IntSummonerApiService intSummonerApiService;
   private final ModelMapper mapper;
+  private final Logger logger = LoggerFactory.getLogger(SummonerDelegador.class);
 
   @Autowired
   private SummonerDelegador(IntSummonerService intSummonerService, IntSummonerApiService intSummonerApiService) {
@@ -122,4 +127,27 @@ public class SummonerDelegador {
   public List<ParticipantInfoDTO> findMatchParticipantsByMatchId(Long matchId) {
     return this.intSummonerService.findMatchParticipantsByMatchId(matchId);
   }
+
+  public Flux<SummonerTierDTO> getSummonerTierFlux(String summonerId, String summonerName) {
+    try {
+      if (CommonFunctions.isNotNullOrEmpty(summonerId)) {
+        return this.intSummonerApiService.getSummonerTierFlux(summonerId);
+      } else if (CommonFunctions.isNotNullOrEmpty(summonerName)) {
+        return this.intSummonerApiService.getSummonerByNameMono(summonerName)
+            .map(SummonerDTO::getSummonerId)
+            .flatMapMany(this.intSummonerApiService::getSummonerTierFlux);
+      } else {
+        return Flux.empty();
+      }
+    } catch (Exception e) {
+      logger.error("An error has ocurred getting summoner tier with " + (summonerId != null ? summonerId : summonerName)
+                    + ": " + e.getMessage());
+      throw new ServiceException("An error has ocurred getting summoner tier with " + (summonerId != null ? summonerId : summonerName), e);
+    }
+
+  }
+
+
+
+
 }

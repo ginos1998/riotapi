@@ -3,8 +3,10 @@ package riot.riotapi.controllers.api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import riot.riotapi.delegators.SummonerDelegador;
 import riot.riotapi.dtos.SummonerDTO;
+import riot.riotapi.dtos.summoner.SummonerTierDTO;
 import riot.riotapi.utils.CommonFunctions;
 
 import java.util.List;
@@ -33,6 +35,12 @@ public class SummonerApiController {
     } else {
       return ResponseEntity.noContent().build();
     }
+  }
+
+  @GetMapping("/tier")
+  public Flux<SummonerTierDTO> getSummonerTierFlux(@RequestParam(required = false) String summonerId,
+                                                    @RequestParam(required = false) String summonerName) {
+    return summonerDelegador.getSummonerTierFlux(summonerId, summonerName);
   }
 
 }
