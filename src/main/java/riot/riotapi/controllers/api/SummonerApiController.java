@@ -3,7 +3,7 @@ package riot.riotapi.controllers.api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import riot.riotapi.delegators.SummonerDelegador;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.summoner.SummonerTierDTO;
@@ -38,8 +38,8 @@ public class SummonerApiController {
   }
 
   @GetMapping("/tier")
-  public Flux<SummonerTierDTO> getSummonerTierFlux(@RequestParam(required = false) String summonerId,
-                                                    @RequestParam(required = false) String summonerName) {
+  public Mono<List<SummonerTierDTO>> getSummonerTierFlux(@RequestParam(required = false) String summonerId,
+                                                         @RequestParam(required = false) String summonerName) {
     return summonerDelegador.getSummonerTierFlux(summonerId, summonerName);
   }
 

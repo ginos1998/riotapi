@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.match.ParticipantDTO;
 import riot.riotapi.dtos.match.ParticipantInfoDTO;
@@ -128,16 +128,16 @@ public class SummonerDelegador {
     return this.intSummonerService.findMatchParticipantsByMatchId(matchId);
   }
 
-  public Flux<SummonerTierDTO> getSummonerTierFlux(String summonerId, String summonerName) {
+  public Mono<List<SummonerTierDTO>> getSummonerTierFlux(String summonerId, String summonerName) {
     try {
       if (CommonFunctions.isNotNullOrEmpty(summonerId)) {
         return this.intSummonerApiService.getSummonerTierFlux(summonerId);
       } else if (CommonFunctions.isNotNullOrEmpty(summonerName)) {
         return this.intSummonerApiService.getSummonerByNameMono(summonerName)
             .map(SummonerDTO::getSummonerId)
-            .flatMapMany(this.intSummonerApiService::getSummonerTierFlux);
+            .flatMap(this.intSummonerApiService::getSummonerTierFlux);
       } else {
-        return Flux.empty();
+        return Mono.empty();
       }
     } catch (Exception e) {
       logger.error("An error has ocurred getting summoner tier with " + (summonerId != null ? summonerId : summonerName)

@@ -103,7 +103,7 @@ public class SummonerPlayingCmd implements SlashCommand {
     }
 
     private Mono<Void> deleteEmojisAll(String gid) {
-        logger.info("Deleting all emojis on guild " + gid + "..");
+        logger.info("Deleting all emojis on guild {}..", gid);
         return this.guildEmojiController.deleteEmojiAll(gid)
                 .onErrorComplete();
     }
@@ -123,16 +123,9 @@ public class SummonerPlayingCmd implements SlashCommand {
         StringBuilder summoners = new StringBuilder();
         StringBuilder champions = new StringBuilder();
         StringBuilder spells = new StringBuilder();
-        int line = 0;
-        String startWith = teamColor.equals(Color.RED) ? "```diff\n" : "```fix\n";
         for(ParticipantInfoDTO match: teamParticipants) {
-            String quote = ((line) %2 == 0) ? "- " : " ";
-            String lineColor = ((line++) %2 == 0) ? startWith : "```md\n";
-//            champions.append(lineColor).append(quote).append(match.getChampionName()).append("\n ").append("\n```");
-            champions.append(match.getChampionEmoji()).append(" ").append(match.getChampionName()).append("\nMadera").append('\n');
-//            summoners.append(lineColor).append(quote).append(match.getSummonerName()).append('\n').append(match.getSummonerLevel()).append('\n').append("```");
+            champions.append(match.getChampionEmoji()).append(" ").append(match.getChampionName()).append("\n").append(match.getSummonerTier()).append('\n');
             summoners.append(match.getSummonerName()).append("\nLvl ").append(match.getSummonerLevel()).append('\n');
-//            spells.append('\n').append(match.getSpell1Emoji()).append("  ").append(match.getSpell2Emoji()).append("\n\n");
             spells.append(match.getSpell1Emoji()).append("  ").append(match.getSpell2Emoji()).append("\n zzz \n");
         }
         return EmbedCreateSpec.builder()

@@ -3,6 +3,7 @@ package riot.riotapi.services.implementations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -110,13 +111,13 @@ public class ImpSummonerApiService implements IntSummonerApiService {
   }
 
   @Override
-  public Flux<SummonerTierDTO> getSummonerTierFlux(String summonerId) {
+  public Mono<List<SummonerTierDTO>> getSummonerTierFlux(String summonerId) {
     logger.info("Start getting summoner tier with summonerId: {}", summonerId);
     return webClient.get()
         .uri(URIs.URI_LOL_SUMMONER_TIER.concat(summonerId))
         .header("X-Riot-Token", this.apiKey)
         .retrieve()
-        .bodyToFlux(SummonerTierDTO.class)
+        .bodyToMono(new ParameterizedTypeReference<List<SummonerTierDTO>>() {})
         .onErrorResume(err -> {
           logger.error("An error has occurred getting summoner tier with summonerId="+summonerId+": " + err.getMessage());
           return Mono.empty();

@@ -21,14 +21,16 @@ public class ParticipantInfoDTO {
     private Boolean win;
     @JsonView({CommonView.HistoryView.class, CommonView.LiveView.class})
     private Integer teamId;
-    public Integer spell1Id;
-    public Integer spell2Id;
+    private Integer spell1Id;
+    private Integer spell2Id;
     @JsonView(CommonView.LiveView.class)
-    public String spellName1;
+    private String spellName1;
     @JsonView(CommonView.LiveView.class)
-    public String spellName2;
-    public String spell1Emoji;
-    public String spell2Emoji;
+    private String spellName2;
+    private String spell1Emoji;
+    private String spell2Emoji;
+    private String summonerTier;
+
 
     public ParticipantInfoDTO(String summonerName, String championName, String lane, Boolean win, Integer teamId) {
         this.summonerName = summonerName;

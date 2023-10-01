@@ -11,10 +11,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple4;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.discord.GuildEmojiDTO;
 import riot.riotapi.dtos.match.*;
+import riot.riotapi.dtos.summoner.SummonerTierDTO;
 import riot.riotapi.entities.Champion;
 import riot.riotapi.entities.Spell;
 import riot.riotapi.entities.Summoner;
@@ -180,7 +181,7 @@ public class ImpMatchApiService implements IntMatchApiService {
      * @return Mono data.
      */
   private Mono<MatchDTO> mapLiveMatchToMatchDTOMono(LiveMatchRootDTO liveMatchDTO, String guildId) {
-      Mono<List<ParticipantInfoDTO>> participantsInfoDTOMono = getListParticipantsInfo(liveMatchDTO.getParticipants(), guildId);
+      Mono<List<ParticipantInfoDTO>> participantsInfoDTOMono = getListParticipantsInfo(liveMatchDTO.getParticipants(), liveMatchDTO.getMode(), guildId);
       MatchDTO matchDTO = new MatchDTO();
       matchDTO.setMode(liveMatchDTO.getMode());
       matchDTO.setStartTime(CommonFunctions.getDateAsString(liveMatchDTO.getStartTime()));
@@ -201,7 +202,7 @@ public class ImpMatchApiService implements IntMatchApiService {
      * @param participants list of participants in the liveMatch
      * @return Mono
      */
-  private Mono<List<ParticipantInfoDTO>> getListParticipantsInfo(ArrayList<ParticipantDTO> participants, String guildId) {
+  private Mono<List<ParticipantInfoDTO>> getListParticipantsInfo(ArrayList<ParticipantDTO> participants, String matchMode, String guildId) {
     List<Champion> championList = championService.findByKeyIn(participants.stream()
                                                                             .map(ParticipantDTO::getChampionId)
                                                                             .toList());
@@ -222,20 +223,23 @@ public class ImpMatchApiService implements IntMatchApiService {
     Flux<SummonerDTO> summoners = summonerApiService.findMatchSummonersByName(participants.stream()
             .map(ParticipantDTO::getSummonerName)
             .toList());
+    Flux<List<SummonerTierDTO>> summonerTierDTOFlux = summoners.flatMap(sum -> summonerApiService.getSummonerTierFlux(sum.getSummonerId()));
 
     Flux<ParticipantDTO> participantDTOFlux = Flux.fromIterable(participants);
 
-    Flux<ParticipantInfoDTO> resultFlux = Flux.zip(participantDTOFlux, summoners, champEmoji) // here the magic appears
+    Flux<ParticipantInfoDTO> resultFlux = Flux.zip(participantDTOFlux, summoners, champEmoji, summonerTierDTOFlux) // here the magic appears
             .map(res -> this.completeParticipantInfoDTO(res, championsMap, spells));
 
     return resultFlux.collectList();
 
   }
 
-  private ParticipantInfoDTO completeParticipantInfoDTO(Tuple3<ParticipantDTO, SummonerDTO, GuildEmojiDTO> res, Map<Long, String> championsMap, Map<Integer, String> spells) {
+  private ParticipantInfoDTO completeParticipantInfoDTO(Tuple4<ParticipantDTO, SummonerDTO, GuildEmojiDTO, List<SummonerTierDTO>> res,
+                                                        Map<Long, String> championsMap, Map<Integer, String> spells) {
       ParticipantDTO participantDTO = res.getT1();
       SummonerDTO summonerDTO = res.getT2();
       GuildEmojiDTO emoji = res.getT3();
+      List<SummonerTierDTO> summonerTierDTO = res.getT4();
 
       ParticipantInfoDTO participantInfoDTO = mapper.map(participantDTO, ParticipantInfoDTO.class);
 
@@ -250,6 +254,9 @@ public class ImpMatchApiService implements IntMatchApiService {
 
       participantInfoDTO.setSummonerLevel(summonerDTO.getSummonerLevel());
       participantInfoDTO.setChampionEmoji(DiscordUtils.formatDiscordEmoji(emoji.getName(), emoji.getId()));
+
+      logger.info("for summoner {} tier: {}", summonerDTO.getName(), summonerTierDTO);
+
       return participantInfoDTO;
   }
 

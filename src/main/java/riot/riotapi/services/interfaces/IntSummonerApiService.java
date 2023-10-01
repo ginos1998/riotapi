@@ -13,5 +13,5 @@ public interface IntSummonerApiService {
   List<SummonerDTO> getSummonerByPuuid(String puuid);
   Flux<SummonerDTO> findMatchSummonersByName(List<String> summonersNames);
   Mono<SummonerDTO> getSummonerByNameMono(String sumName);
-  Flux<SummonerTierDTO> getSummonerTierFlux(String summonerId);
+  Mono<List<SummonerTierDTO>> getSummonerTierFlux(String summonerId);
 }
