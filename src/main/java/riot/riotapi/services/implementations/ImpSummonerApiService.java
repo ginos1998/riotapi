@@ -3,11 +3,14 @@ package riot.riotapi.services.implementations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import riot.riotapi.dtos.SummonerDTO;
+import riot.riotapi.dtos.summoner.SummonerChampionMasteryDTO;
+import riot.riotapi.dtos.summoner.SummonerTierDTO;
 import riot.riotapi.exceptions.ServiceException;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
 import riot.riotapi.utils.CommonFunctions;
@@ -96,16 +99,44 @@ public class ImpSummonerApiService implements IntSummonerApiService {
    */
   public Mono<SummonerDTO> getSummonerByNameMono(String sumName) {
     String url = URIs.URI_SUMMONER_ACCOUNT_NAME.concat(sumName);
-    logger.info("Start champion api request with ".concat(sumName));
+    logger.info("Start champion api request with {}", sumName);
     return webClient.get()
             .uri(url)
-            .header("X-Riot-Token", this.apiKey)
+            .header(URIs.HEADER_RIOT_API_TOKEN, this.apiKey)
             .retrieve()
             .bodyToMono(SummonerDTO.class)
             .onErrorResume(err -> {
               logger.error("An error has occurred getting summoner by name (Mono): " + err.getMessage());
               return Mono.empty();
             });
+  }
+
+  @Override
+  public Mono<List<SummonerTierDTO>> getSummonerTierFlux(String summonerId) {
+    logger.info("Start getting summoner tier with summonerId: {}", summonerId);
+    return webClient.get()
+        .uri(URIs.URI_LOL_SUMMONER_TIER.concat(summonerId))
+        .header(URIs.HEADER_RIOT_API_TOKEN, this.apiKey)
+        .retrieve()
+        .bodyToMono(new ParameterizedTypeReference<List<SummonerTierDTO>>() {})
+        .onErrorResume(err -> {
+          logger.error("An error has occurred getting summoner tier with summonerId= {}. Error: {}",summonerId, err.getMessage());
+          return Mono.empty();
+        });
+  }
+
+  @Override
+  public Mono<List<SummonerChampionMasteryDTO>> getSummonerChampionMasteryDTOListBySummonerPUUIDMono(String summonerPUUID) {
+    String uri = URIs.URI_LOL_SUMMONER_CHAMPION_MASTERY.concat(summonerPUUID);
+    return webClient.get()
+        .uri(uri)
+        .header(URIs.HEADER_RIOT_API_TOKEN, this.apiKey)
+        .retrieve()
+        .bodyToMono(new ParameterizedTypeReference<List<SummonerChampionMasteryDTO>>() {})
+        .onErrorResume(err -> {
+          logger.error("An error has occurred getting summoner champion-mastery with summonerPUUID: {}. Error: {}", summonerPUUID, err.getMessage());
+          return Mono.just(new ArrayList<>());
+        });
   }
 
   /**

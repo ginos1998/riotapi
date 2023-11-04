@@ -3,11 +3,17 @@ package riot.riotapi.delegators;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 import riot.riotapi.dtos.SummonerDTO;
+import riot.riotapi.dtos.match.LiveMatchRootDTO;
 import riot.riotapi.dtos.match.ParticipantDTO;
 import riot.riotapi.dtos.match.ParticipantInfoDTO;
+import riot.riotapi.dtos.summoner.SummonerChampionMasteryDTO;
+import riot.riotapi.dtos.summoner.SummonerStatsDTO;
+import riot.riotapi.dtos.summoner.SummonerTierDTO;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
+import riot.riotapi.services.interfaces.IntMatchApiService;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
 import riot.riotapi.services.interfaces.IntSummonerService;
 import riot.riotapi.utils.CommonFunctions;
@@ -21,12 +27,15 @@ public class SummonerDelegador {
 
   private final IntSummonerService intSummonerService;
   private final IntSummonerApiService intSummonerApiService;
+  private final IntMatchApiService intMatchApiService;
   private final ModelMapper mapper;
 
   @Autowired
-  private SummonerDelegador(IntSummonerService intSummonerService, IntSummonerApiService intSummonerApiService) {
+  private SummonerDelegador(IntSummonerService intSummonerService, IntSummonerApiService intSummonerApiService,
+                            IntMatchApiService intMatchApiService) {
     this.intSummonerService = intSummonerService;
     this.intSummonerApiService = intSummonerApiService;
+    this.intMatchApiService = intMatchApiService;
     this.mapper = new ModelMapper();
   }
 
@@ -122,4 +131,27 @@ public class SummonerDelegador {
   public List<ParticipantInfoDTO> findMatchParticipantsByMatchId(Long matchId) {
     return this.intSummonerService.findMatchParticipantsByMatchId(matchId);
   }
+
+  public Mono<SummonerStatsDTO> getSummonerStatsByNameMono(String summonerName) {
+    return intSummonerApiService.getSummonerByNameMono(summonerName)
+        .flatMap(sum -> {
+          Mono<List<SummonerTierDTO>> summonerTierDTOMono = intSummonerApiService.getSummonerTierFlux(sum.getSummonerId());
+          Mono<LiveMatchRootDTO> liveMatchRootDTOMono = intMatchApiService.getLiveMatchBySummonerIdMono(sum.getSummonerId());
+          Mono<List<SummonerChampionMasteryDTO>> summonerChampionMasteryDTOListMono = intSummonerApiService.getSummonerChampionMasteryDTOListBySummonerPUUIDMono(sum.getPuuid());
+
+          return Mono.zip(summonerTierDTOMono, liveMatchRootDTOMono, summonerChampionMasteryDTOListMono)
+              .map(zipped -> {
+                List<SummonerTierDTO> summonerTierDTOList = zipped.getT1();
+                LiveMatchRootDTO liveMatchRootDTO = zipped.getT2();
+                List<SummonerChampionMasteryDTO> summonerChampionMasteryDTOList = zipped.getT3();
+                SummonerStatsDTO summonerStatsDTO = new SummonerStatsDTO(sum, summonerTierDTOList, summonerChampionMasteryDTOList);
+                summonerStatsDTO.setIsPlaying(liveMatchRootDTO.getMatchId() != null);
+                return summonerStatsDTO;
+              });
+        });
+  }
+
+
+
+
 }
