@@ -22,14 +22,14 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class PlayerCommand implements SlashCommand{
+public class SummonerStatsCommand implements SlashCommand{
 
   private final SummonerDelegador summonerDelegador;
-  private final Logger logger = LoggerFactory.getLogger(PlayerCommand.class);
+  private final Logger logger = LoggerFactory.getLogger(SummonerStatsCommand.class);
   private final Map<String, String> queueTypesMap = new HashMap<>();
 
   @Autowired
-  public PlayerCommand(SummonerDelegador summonerDelegador) {
+  public SummonerStatsCommand(SummonerDelegador summonerDelegador) {
     this.summonerDelegador = summonerDelegador;
     this.queueTypesMap.put("RANKED_SOLO_5x5", "SOLO/DUO");
     this.queueTypesMap.put("RANKED_FLEX_SR", "FLEX");
@@ -37,12 +37,12 @@ public class PlayerCommand implements SlashCommand{
 
   @Override
   public String getName() {
-    return "player";
+    return "invocador";
   }
 
   @Override
   public Mono<Void> handle(ChatInputInteractionEvent event) {
-    String name = event.getOption("name")
+    String name = event.getOption("nombre")
                         .flatMap(ApplicationCommandInteractionOption::getValue)
                         .map(ApplicationCommandInteractionOptionValue::asString)
                         .orElseThrow();
