@@ -6,6 +6,7 @@ import lombok.Data;
 public class SummonerChampionMasteryDTO {
   private String puuid;
   private Long championId;
+  private String championName;
   private Long championLevel;
   private Long championPoints;
   private Long lastPlayTime;

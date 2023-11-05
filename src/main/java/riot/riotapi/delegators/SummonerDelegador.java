@@ -11,8 +11,10 @@ import riot.riotapi.dtos.match.ParticipantInfoDTO;
 import riot.riotapi.dtos.summoner.SummonerChampionMasteryDTO;
 import riot.riotapi.dtos.summoner.SummonerStatsDTO;
 import riot.riotapi.dtos.summoner.SummonerTierDTO;
+import riot.riotapi.entities.Champion;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
+import riot.riotapi.services.interfaces.IntChampionService;
 import riot.riotapi.services.interfaces.IntMatchApiService;
 import riot.riotapi.services.interfaces.IntSummonerApiService;
 import riot.riotapi.services.interfaces.IntSummonerService;
@@ -28,14 +30,16 @@ public class SummonerDelegador {
   private final IntSummonerService intSummonerService;
   private final IntSummonerApiService intSummonerApiService;
   private final IntMatchApiService intMatchApiService;
+  private final IntChampionService intChampionService;
   private final ModelMapper mapper;
 
   @Autowired
   private SummonerDelegador(IntSummonerService intSummonerService, IntSummonerApiService intSummonerApiService,
-                            IntMatchApiService intMatchApiService) {
+                            IntMatchApiService intMatchApiService, IntChampionService intChampionService) {
     this.intSummonerService = intSummonerService;
     this.intSummonerApiService = intSummonerApiService;
     this.intMatchApiService = intMatchApiService;
+    this.intChampionService = intChampionService;
     this.mapper = new ModelMapper();
   }
 
@@ -144,6 +148,15 @@ public class SummonerDelegador {
                 List<SummonerTierDTO> summonerTierDTOList = zipped.getT1();
                 LiveMatchRootDTO liveMatchRootDTO = zipped.getT2();
                 List<SummonerChampionMasteryDTO> summonerChampionMasteryDTOList = zipped.getT3();
+                List<Champion> championList = intChampionService.findByKeyIn(summonerChampionMasteryDTOList.stream()
+                                                                                                                  .map(SummonerChampionMasteryDTO::getChampionId)
+                                                                                                                  .toList());
+                summonerChampionMasteryDTOList.forEach(scm -> championList.forEach(champ -> {
+                    if(champ.getKey().equals(scm.getChampionId())) {
+                      scm.setChampionName(champ.getName());
+                    }
+                  })
+                );
                 SummonerStatsDTO summonerStatsDTO = new SummonerStatsDTO(sum, summonerTierDTOList, summonerChampionMasteryDTOList);
                 summonerStatsDTO.setIsPlaying(liveMatchRootDTO.getMatchId() != null);
                 return summonerStatsDTO;
