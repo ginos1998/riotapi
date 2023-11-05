@@ -179,6 +179,10 @@ public class ImpMatchApiService implements IntMatchApiService {
      * @return Mono data.
      */
   private Mono<MatchDTO> mapLiveMatchToMatchDTOMono(LiveMatchRootDTO liveMatchDTO, String guildId) {
+      if (liveMatchDTO.getMatchId() == null) {
+        return Mono.empty();
+      }
+
       Mono<List<ParticipantInfoDTO>> participantsInfoDTOMono = getListParticipantsInfo(liveMatchDTO.getParticipants(), guildId);
       MatchDTO matchDTO = new MatchDTO();
       matchDTO.setMode(liveMatchDTO.getMode());
