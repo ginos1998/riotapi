@@ -14,6 +14,7 @@ import riot.riotapi.delegators.SummonerDelegador;
 import riot.riotapi.dtos.summoner.SummonerChampionMasteryDTO;
 import riot.riotapi.dtos.summoner.SummonerStatsDTO;
 import riot.riotapi.externals.discord.utils.URLs;
+import riot.riotapi.utils.CommonFunctions;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -46,12 +47,12 @@ public class SummonerStatsCommand implements SlashCommand{
                         .flatMap(ApplicationCommandInteractionOption::getValue)
                         .map(ApplicationCommandInteractionOptionValue::asString)
                         .orElseThrow();
+    int timeOutSeconds = 3;
     return summonerDelegador.getSummonerStatsByNameMono(name)
         .flatMap(sumStats -> event.reply()
-            .withEmbeds(headerEmbed(sumStats),
-                                    summonerTierEmbed(sumStats),
-                                    summonerTop3Masteries(sumStats)))
-        .timeout(Duration.ofSeconds(2))
+                                  .withEmbeds(summonerStatsEmbed(sumStats))
+          )
+        .timeout(Duration.ofSeconds(timeOutSeconds))
         .onErrorResume(err -> {
           logger.error("Error on summonerDelegador.flatMap: {}",err.getMessage());
           return Mono.empty();
@@ -66,66 +67,64 @@ public class SummonerStatsCommand implements SlashCommand{
         ));
   }
 
-  private EmbedCreateSpec headerEmbed(SummonerStatsDTO summonerStatsDTO) {
-    String isPlaying = Boolean.TRUE.equals(summonerStatsDTO.getIsPlaying())? "Yes" : "No";
-    return EmbedCreateSpec.builder()
-        .color(Color.MEDIUM_SEA_GREEN)
-        .title(String.format("Stats of %s", summonerStatsDTO.getSummonerDTO().getName()))
-        .description(String.format("> **LAS** | Level: **%d** | Is playing: **%s**", summonerStatsDTO.getSummonerDTO().getSummonerLevel(), isPlaying))
-        .build();
-  }
-
-  private EmbedCreateSpec summonerTierEmbed(SummonerStatsDTO summonerStatsDTO) {
-    StringBuilder type = new StringBuilder();
-    StringBuilder tier = new StringBuilder();
-    StringBuilder rank = new StringBuilder();
+  private EmbedCreateSpec summonerStatsEmbed(SummonerStatsDTO summonerStatsDTO) {
+    int championMastersAmount = 3;
+    boolean inline = true;
+    String whiteSpace = "\u200B";
+    String isPlaying = Boolean.TRUE.equals(summonerStatsDTO.getIsPlaying())? "Si" : "No";
+    String lastRevision = CommonFunctions.getDateAsString(summonerStatsDTO.getSummonerDTO().getRevisionDate());
+    StringBuilder type = new StringBuilder("**Tipo**\n");
+    StringBuilder tier = new StringBuilder("**Tier**\n");
+    StringBuilder rank = new StringBuilder("**Rango**\n");
+    StringBuilder champ = new StringBuilder("**Campeón**\n");
+    StringBuilder level = new StringBuilder("**Nivel**\n");
+    StringBuilder points = new StringBuilder("**Puntos**\n");
+    
     summonerStatsDTO.getSummonerTierDTOList().forEach(sumTier -> {
       type.append(queueTypesMap.get(sumTier.getQueueType())).append('\n');
       tier.append(sumTier.getTier()).append('\n');
       rank.append(sumTier.getRank()).append('\n');
     });
-    return EmbedCreateSpec.builder()
-        .title("Tier")
-        .color(Color.MOON_YELLOW)
-        .addField("Type", type.toString(),true)
-        .addField("Tier", tier.toString(), true)
-        .addField("Rank", rank.toString(), true)
-        .build();
-  }
-
-  private EmbedCreateSpec summonerTop3Masteries(SummonerStatsDTO summonerStatsDTO) {
     List<SummonerChampionMasteryDTO> summonerChampionMasteryDTOList = new ArrayList<>();
-    StringBuilder champ = new StringBuilder();
-    StringBuilder level = new StringBuilder();
-    StringBuilder points = new StringBuilder();
-    if (summonerStatsDTO.getSummonerChampionMasteryDTOS().size() > 3) {
-      for (int i = 0; i < 3; i++) {
-        summonerChampionMasteryDTOList.add(summonerStatsDTO.getSummonerChampionMasteryDTOS().get(i));
+
+    if (summonerStatsDTO.getSummonerChampionMasteryDTOS().size() > championMastersAmount) {
+      for (int i = 0; i < championMastersAmount; i++) {
+        SummonerChampionMasteryDTO sumMastery = summonerStatsDTO.getSummonerChampionMasteryDTOS().get(i);
+        summonerChampionMasteryDTOList.add(sumMastery);
+        buildSummonerMastersEmbed(sumMastery, champ, level, points);
       }
     } else {
       summonerChampionMasteryDTOList.addAll(summonerStatsDTO.getSummonerChampionMasteryDTOS());
+      summonerChampionMasteryDTOList.forEach(sumMastery -> buildSummonerMastersEmbed(sumMastery, champ, level, points));
     }
-    summonerChampionMasteryDTOList.forEach(sumMastery -> {
-      champ.append(sumMastery.getChampionName()).append('\n');
-      level.append(sumMastery.getChampionLevel()).append('\n');
-      points.append(sumMastery.getChampionPoints()).append('\n');
-    });
 
     return EmbedCreateSpec.builder()
-        .title("Mastery")
-        .color(Color.SUMMER_SKY)
-        .addField("Champion", champ.toString(),true)
-        .addField("Level", level.toString(), true)
-        .addField("Points", points.toString(), true)
+        .color(Color.MEDIUM_SEA_GREEN)
+        .title(String.format(":bar_chart: Estadísticas de %s", summonerStatsDTO.getSummonerDTO().getName()))
+        .description(String.format("> **LAS**  |  Nivel: **%d**  |  ¿Está jugando?: **%s**  \n> Última vez: %s", summonerStatsDTO.getSummonerDTO().getSummonerLevel(), isPlaying, lastRevision))
+        .addField(whiteSpace, whiteSpace, !inline)
+        .addField(whiteSpace, tier.toString(), inline)
+        .addField("TIERS", type.toString(),inline)
+        .addField(whiteSpace, rank.toString(), inline)
+        .addField(whiteSpace, whiteSpace, false)
+        .addField(whiteSpace, champ.toString(),inline)
+        .addField("MAESTRÍAS", level.toString(), inline)
+        .addField(whiteSpace, points.toString(), inline)
         .build();
+  }
+
+  private void buildSummonerMastersEmbed(SummonerChampionMasteryDTO sumMastery, StringBuilder champ, StringBuilder level, StringBuilder points) {
+    champ.append(String.format("<:%s:%s>", "leona", "1173280999933755434")).append(" ").append(sumMastery.getChampionName()).append('\n');
+    level.append(sumMastery.getChampionLevel()).append('\n');
+    points.append(sumMastery.getChampionPoints()).append('\n');
   }
 
   private EmbedCreateSpec playerNotFoundEmbed(String name) {
     return EmbedCreateSpec.builder()
         .color(Color.YELLOW)
         .author("League Of Trolls", URLs.URL_LoT_REPO , URLs.ICON_LoT_BOT)
-        .title("UPS! Not found")
-        .description("Summoner ".concat(name).concat(" not found :face_with_monocle:. Please, try again. If you think this is an error, type ***/about*** to get support info."))
+        .title("UPS! Algo falló")
+        .description("Invocador ".concat(name).concat(" no encontrado :face_with_monocle:. Por favor, intentá de nuevo. Si crees que es un error, usá el comando ***/about*** para obtener ayuda."))
         .build();
   }
 
