@@ -47,7 +47,7 @@ public class SummonerStatsCommand implements SlashCommand{
                         .flatMap(ApplicationCommandInteractionOption::getValue)
                         .map(ApplicationCommandInteractionOptionValue::asString)
                         .orElseThrow();
-    int timeOutSeconds = 3;
+    int timeOutSeconds = 5;
     return summonerDelegador.getSummonerStatsByNameMono(name)
         .flatMap(sumStats -> event.reply()
                                   .withEmbeds(summonerStatsEmbed(sumStats))

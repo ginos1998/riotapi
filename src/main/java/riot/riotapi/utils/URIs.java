@@ -19,4 +19,6 @@ public class URIs {
   public static final String URI_LOL_LIVE_MATCH = "https://la2.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/";
   public static final String URI_LOL_SUMMONER_TIER = "https://la2.api.riotgames.com/lol/league/v4/entries/by-summoner/";
   public static final String URI_LOL_SUMMONER_CHAMPION_MASTERY = "https://la2.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/";
+
+  public static final String URI_RIOT_API_GATEWAY = "http://localhost:8082";
 }

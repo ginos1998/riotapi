@@ -42,4 +42,5 @@ public class SummonerApiController {
     return summonerDelegador.getSummonerStatsByNameMono(summonerName);
   }
 
+
 }

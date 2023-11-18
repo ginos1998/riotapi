@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import riot.riotapi.dtos.MasteryDTO;
 import riot.riotapi.dtos.SummonerDTO;
 import riot.riotapi.dtos.summoner.SummonerChampionMasteryDTO;
 import riot.riotapi.dtos.summoner.SummonerTierDTO;
@@ -136,6 +137,34 @@ public class ImpSummonerApiService implements IntSummonerApiService {
         .onErrorResume(err -> {
           logger.error("An error has occurred getting summoner champion-mastery with summonerPUUID: {}. Error: {}", summonerPUUID, err.getMessage());
           return Mono.just(new ArrayList<>());
+        });
+  }
+
+  @Override
+  public Flux<MasteryDTO> getMasteryByLevel(List<Long> level) {
+    Flux<Long> levelsFlux = Flux.fromIterable(level);
+    return levelsFlux.flatMapSequential(lvl ->
+        webClient.get()
+            .uri(URIs.URI_RIOT_API_GATEWAY.concat("/mastery/by-level/").concat(String.valueOf(lvl)))
+            .retrieve()
+            .bodyToMono(MasteryDTO.class)
+            .onErrorResume(err -> {
+              logger.error("An error has occurred while getting masters from RiotApi Gateway. Error: {}", err.getMessage());
+              return Mono.just(new MasteryDTO());
+            })
+    );
+  }
+
+  @Override
+  public Flux<SummonerTierDTO> getTiersAll() {
+    String uri = URIs.URI_RIOT_API_GATEWAY.concat("/tiers/all");
+    return webClient.get()
+        .uri(uri)
+        .retrieve()
+        .bodyToFlux(SummonerTierDTO.class)
+        .onErrorResume(err -> {
+          logger.error("An error has occurred while getting tiers from RiotApi Gateway. Error: {}", err.getMessage());
+          return Mono.just(new SummonerTierDTO());
         });
   }
 

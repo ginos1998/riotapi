@@ -4,6 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import riot.riotapi.entities.Champion;
 import riot.riotapi.entities.ChampionData;
 import riot.riotapi.entities.Info;
@@ -30,6 +33,7 @@ import java.util.Map;
 @Slf4j
 public class ImpChampionApiService implements IntChampionApiService {
 
+  private final WebClient webClient;
   private final IntPersistenceChampionData intPersistenceChampionData;
   private final IntPersistenceChampion intPersistenceChampion;
   private final IntPersistenceStats intPersistenceStats;
@@ -45,6 +49,8 @@ public class ImpChampionApiService implements IntChampionApiService {
     this.intPersistenceStats = intPersistenceStats;
     this.intPersistenceInfo = intPersistenceInfo;
     this.restTemplate = new RestTemplate();
+    this.webClient = WebClient.create();
+
   }
 
   @Override
@@ -146,4 +152,19 @@ public class ImpChampionApiService implements IntChampionApiService {
 
     return "OK";
   }
+
+  public Flux<ChampionDTO> getChampionByIdFlux(List<Long> championIdList) {
+    Flux<Long> championIdFlux = Flux.fromIterable(championIdList);
+    return championIdFlux.flatMapSequential(championId ->
+        webClient.get()
+            .uri(URIs.URI_RIOT_API_GATEWAY.concat("/champion/").concat(String.valueOf(championId)))
+            .retrieve()
+            .bodyToMono(ChampionDTO.class)
+            .onErrorResume(err -> {
+              log.error("An error has occurred while getting champion from RiotApi Gateway. Error: {}", err.getMessage());
+              return Mono.just(new ChampionDTO());
+            })
+        );
+  }
+
 }

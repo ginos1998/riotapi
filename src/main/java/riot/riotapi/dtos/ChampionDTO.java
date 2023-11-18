@@ -7,7 +7,6 @@ import java.util.ArrayList;
 
 @Data
 public class ChampionDTO {
-  @JsonProperty("id")
   private String championId;
   private String key;
   private String name;
@@ -27,4 +26,5 @@ public class ChampionDTO {
   private ArrayList<SpellDTO> spells;
   private PassiveDTO passiveDTO;
   private ArrayList<Object> recommended;
+  private String dsEmoji;
 }

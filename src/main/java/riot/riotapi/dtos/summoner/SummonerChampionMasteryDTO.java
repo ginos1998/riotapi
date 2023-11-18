@@ -15,4 +15,6 @@ public class SummonerChampionMasteryDTO {
   private Boolean chestGranted;
   private Long tokensEarned;
   private String summonerId;
+  private String masteryEmoji;
+  private String champEmoji;
 }
