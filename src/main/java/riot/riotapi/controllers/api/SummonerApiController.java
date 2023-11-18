@@ -3,8 +3,10 @@ package riot.riotapi.controllers.api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 import riot.riotapi.delegators.SummonerDelegador;
 import riot.riotapi.dtos.SummonerDTO;
+import riot.riotapi.dtos.summoner.SummonerStatsDTO;
 import riot.riotapi.utils.CommonFunctions;
 
 import java.util.List;
@@ -34,5 +36,11 @@ public class SummonerApiController {
       return ResponseEntity.noContent().build();
     }
   }
+
+  @GetMapping("/stats")
+  public Mono<SummonerStatsDTO> getSummonerStatsDTOMono(@RequestParam String summonerName) {
+    return summonerDelegador.getSummonerStatsByNameMono(summonerName);
+  }
+
 
 }

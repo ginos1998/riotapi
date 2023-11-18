@@ -3,30 +3,45 @@ package riot.riotapi.delegators;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple3;
+import riot.riotapi.dtos.MasteryDTO;
 import riot.riotapi.dtos.SummonerDTO;
+import riot.riotapi.dtos.ChampionDTO;
+import riot.riotapi.dtos.match.LiveMatchRootDTO;
 import riot.riotapi.dtos.match.ParticipantDTO;
 import riot.riotapi.dtos.match.ParticipantInfoDTO;
+import riot.riotapi.dtos.summoner.SummonerChampionMasteryDTO;
+import riot.riotapi.dtos.summoner.SummonerStatsDTO;
+import riot.riotapi.dtos.summoner.SummonerTierDTO;
 import riot.riotapi.entities.Summoner;
 import riot.riotapi.exceptions.ServiceException;
-import riot.riotapi.services.interfaces.IntSummonerApiService;
-import riot.riotapi.services.interfaces.IntSummonerService;
+import riot.riotapi.services.interfaces.*;
 import riot.riotapi.utils.CommonFunctions;
 import riot.riotapi.utils.ConstantsExceptions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class SummonerDelegador {
 
   private final IntSummonerService intSummonerService;
   private final IntSummonerApiService intSummonerApiService;
+  private final IntMatchApiService intMatchApiService;
+  private final IntChampionApiService intChampionApiService;
   private final ModelMapper mapper;
 
   @Autowired
-  private SummonerDelegador(IntSummonerService intSummonerService, IntSummonerApiService intSummonerApiService) {
+  private SummonerDelegador(IntSummonerService intSummonerService, IntSummonerApiService intSummonerApiService,
+                            IntMatchApiService intMatchApiService, IntChampionApiService intChampionApiService) {
     this.intSummonerService = intSummonerService;
     this.intSummonerApiService = intSummonerApiService;
+    this.intMatchApiService = intMatchApiService;
+    this.intChampionApiService = intChampionApiService;
     this.mapper = new ModelMapper();
   }
 
@@ -122,4 +137,81 @@ public class SummonerDelegador {
   public List<ParticipantInfoDTO> findMatchParticipantsByMatchId(Long matchId) {
     return this.intSummonerService.findMatchParticipantsByMatchId(matchId);
   }
+
+  public Mono<SummonerStatsDTO> getSummonerStatsByNameMono(String summonerName) {
+    return intSummonerApiService.getSummonerByNameMono(summonerName)
+        .flatMap(sum -> {
+          Mono<List<SummonerTierDTO>> summonerTierDTOMono = intSummonerApiService.getSummonerTierFlux(sum.getSummonerId());
+          Mono<LiveMatchRootDTO> liveMatchRootDTOMono = intMatchApiService.getLiveMatchBySummonerIdMono(sum.getSummonerId());
+          Mono<List<SummonerChampionMasteryDTO>> summonerChampionMasteryDTOListMono = intSummonerApiService.getSummonerChampionMasteryDTOListBySummonerPUUIDMono(sum.getPuuid());
+
+          return Mono.zip(summonerTierDTOMono, liveMatchRootDTOMono, summonerChampionMasteryDTOListMono)
+              .flatMap(zipped -> {
+                List<SummonerTierDTO> summonerTierDTOList = zipped.getT1();
+                LiveMatchRootDTO liveMatchRootDTO = zipped.getT2();
+                List<SummonerChampionMasteryDTO> summonerChampionMasteryDTOList = zipped.getT3();
+
+                Set<Long> levelSet = summonerChampionMasteryDTOList.stream()
+                                                                    .map(SummonerChampionMasteryDTO::getChampionLevel)
+                                                                    .collect(Collectors.toSet());
+
+                Flux<MasteryDTO> masteryDTOFlux = intSummonerApiService.getMasteryByLevel(levelSet.stream().toList());
+
+                List<Long> championIdList = summonerChampionMasteryDTOList.stream()
+                    .map(SummonerChampionMasteryDTO::getChampionId)
+                    .toList();
+                Flux<ChampionDTO> championDTOFlux = intChampionApiService.getChampionByIdFlux(championIdList);
+                Flux<SummonerTierDTO> summonerTierDTOFlux = intSummonerApiService.getTiersAll();
+
+                return Mono.zip(masteryDTOFlux.collectList(), championDTOFlux.collectList(), summonerTierDTOFlux.collectList())
+                    .map(secondZipped -> buildSummonerStatsDTO(
+                        secondZipped,
+                        sum,
+                        summonerTierDTOList,
+                        liveMatchRootDTO,
+                        summonerChampionMasteryDTOList
+                    ));
+              });
+        });
+  }
+
+  private SummonerStatsDTO buildSummonerStatsDTO(Tuple3<List<MasteryDTO>, List<ChampionDTO>, List<SummonerTierDTO>> tuple,
+                                                 SummonerDTO summonerDTO,
+                                                 List<SummonerTierDTO> summonerTierDTOList,
+                                                 LiveMatchRootDTO liveMatchRootDTO,
+                                                 List<SummonerChampionMasteryDTO> summonerChampionMasteryDTOList) {
+    List<MasteryDTO> masteryDTOList = tuple.getT1();
+    List<ChampionDTO> championList = tuple.getT2();
+    List<SummonerTierDTO> tierDTOList = tuple.getT3();
+
+    summonerChampionMasteryDTOList.forEach(scm -> {
+      championList.forEach(champ -> {
+        if (Long.valueOf(champ.getKey()).equals(scm.getChampionId())) {
+          scm.setChampionName(champ.getName());
+          scm.setChampEmoji(champ.getDsEmoji());
+        }
+      });
+
+      masteryDTOList.forEach(masteryDTO -> {
+        if (scm.getChampionLevel().equals(masteryDTO.getLevel())) {
+          scm.setMasteryEmoji(masteryDTO.getDsEmoji());
+        }
+      });
+    });
+
+    summonerTierDTOList.forEach(sumTier ->
+        tierDTOList.forEach(tier -> {
+          if (sumTier.getTier().equalsIgnoreCase(tier.getTier())) {
+            sumTier.setDsEmoji(tier.getDsEmoji());
+          }
+        })
+    );
+
+    SummonerStatsDTO summonerStatsDTO = new SummonerStatsDTO(summonerDTO, summonerTierDTOList, summonerChampionMasteryDTOList);
+    summonerStatsDTO.setIsPlaying(liveMatchRootDTO.getMatchId() != null);
+
+    return summonerStatsDTO;
+  }
+
+
 }

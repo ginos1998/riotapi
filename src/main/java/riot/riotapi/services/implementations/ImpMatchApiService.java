@@ -61,7 +61,7 @@ public class ImpMatchApiService implements IntMatchApiService {
 
       String[] matchesList = webClient.get()
           .uri(buildDynamicURL(summoner.getPuuid(), filter))
-          .header("X-Riot-Token", this.apiKey)
+          .header(URIs.HEADER_RIOT_API_TOKEN, this.apiKey)
           .retrieve()
           .bodyToMono(String[].class).block();
 
@@ -83,7 +83,7 @@ public class ImpMatchApiService implements IntMatchApiService {
 
       matchRootDTO = webClient.get()
               .uri(URIs.URI_LOL_MATCHES_BY_MATCH_ID.concat(matchId))
-              .header("X-Riot-Token", this.apiKey)
+              .header(URIs.HEADER_RIOT_API_TOKEN, this.apiKey)
               .retrieve()
               .bodyToMono(MatchRootDTO.class)
               .block();
@@ -109,7 +109,7 @@ public class ImpMatchApiService implements IntMatchApiService {
 
       liveMatchDTO = webClient.get()
               .uri(URIs.URI_LOL_LIVE_MATCH.concat(summonerId))
-              .header("X-Riot-Token", this.apiKey)
+              .header(URIs.HEADER_RIOT_API_TOKEN, this.apiKey)
               .retrieve()
               .bodyToMono(LiveMatchRootDTO.class)
               .block();
@@ -163,12 +163,12 @@ public class ImpMatchApiService implements IntMatchApiService {
       String liveMatchUrl = URIs.URI_LOL_LIVE_MATCH.concat(summonerId);
       return webClient.get()
               .uri(liveMatchUrl)
-              .header("X-Riot-Token", this.apiKey)
+              .header(URIs.HEADER_RIOT_API_TOKEN, this.apiKey)
               .retrieve()
               .bodyToMono(LiveMatchRootDTO.class)
               .onErrorResume(err -> {
                   logger.error("An error has occurred getting liveMatch: " + err.getMessage());
-                  return Mono.empty();
+                  return Mono.just(new LiveMatchRootDTO());
               });
 
   }
@@ -179,6 +179,10 @@ public class ImpMatchApiService implements IntMatchApiService {
      * @return Mono data.
      */
   private Mono<MatchDTO> mapLiveMatchToMatchDTOMono(LiveMatchRootDTO liveMatchDTO, String guildId) {
+      if (liveMatchDTO.getMatchId() == null) {
+        return Mono.empty();
+      }
+
       Mono<List<ParticipantInfoDTO>> participantsInfoDTOMono = getListParticipantsInfo(liveMatchDTO.getParticipants(), guildId);
       MatchDTO matchDTO = new MatchDTO();
       matchDTO.setMode(liveMatchDTO.getMode());

@@ -1,0 +1,12 @@
+{
+  "name": "invocador",
+  "description": "Obtener estadísticas del invocador",
+  "options": [
+    {
+      "name": "nombre",
+      "description": "Nombre del invocador",
+      "type": 3,
+      "required": true
+    }
+  ]
+}
