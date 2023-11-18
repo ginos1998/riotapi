@@ -17,10 +17,7 @@ import riot.riotapi.externals.discord.utils.URLs;
 import riot.riotapi.utils.CommonFunctions;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class SummonerStatsCommand implements SlashCommand{
@@ -28,6 +25,7 @@ public class SummonerStatsCommand implements SlashCommand{
   private final SummonerDelegador summonerDelegador;
   private final Logger logger = LoggerFactory.getLogger(SummonerStatsCommand.class);
   private final Map<String, String> queueTypesMap = new HashMap<>();
+  private final String space = " ";
 
   @Autowired
   public SummonerStatsCommand(SummonerDelegador summonerDelegador) {
@@ -47,16 +45,13 @@ public class SummonerStatsCommand implements SlashCommand{
                         .flatMap(ApplicationCommandInteractionOption::getValue)
                         .map(ApplicationCommandInteractionOptionValue::asString)
                         .orElseThrow();
-    int timeOutSeconds = 5;
+    int timeOutSeconds = 6;
     return summonerDelegador.getSummonerStatsByNameMono(name)
         .flatMap(sumStats -> event.reply()
                                   .withEmbeds(summonerStatsEmbed(sumStats))
+                                  .timeout(Duration.ofSeconds(timeOutSeconds))
           )
         .timeout(Duration.ofSeconds(timeOutSeconds))
-        .onErrorResume(err -> {
-          logger.error("Error on summonerDelegador.flatMap: {}",err.getMessage());
-          return Mono.empty();
-        })
         .switchIfEmpty(Mono.defer(() -> {
               logger.debug("No live match found. Returning default embed.");
               return event.reply()
@@ -64,7 +59,14 @@ public class SummonerStatsCommand implements SlashCommand{
                   .withEmbeds(playerNotFoundEmbed(name))
                   .then();
             }
-        ));
+        ))
+        .onErrorResume(err -> {
+          logger.warn("Error on summonerDelegador.flatMap: {}",err.getMessage());
+          return event.reply()
+              .withEphemeral(false)
+              .withEmbeds(playerNotFoundEmbed(name))
+              .then();
+        });
   }
 
   private EmbedCreateSpec summonerStatsEmbed(SummonerStatsDTO summonerStatsDTO) {
@@ -82,10 +84,14 @@ public class SummonerStatsCommand implements SlashCommand{
     
     summonerStatsDTO.getSummonerTierDTOList().forEach(sumTier -> {
       type.append(queueTypesMap.get(sumTier.getQueueType())).append('\n');
-      tier.append(sumTier.getTier()).append('\n');
+      tier.append(sumTier.getDsEmoji()).append(space).append(sumTier.getTier()).append('\n');
       rank.append(sumTier.getRank()).append('\n');
     });
     List<SummonerChampionMasteryDTO> summonerChampionMasteryDTOList = new ArrayList<>();
+
+    summonerStatsDTO.getSummonerChampionMasteryDTOS()
+        .sort(Comparator.comparingLong(SummonerChampionMasteryDTO::getChampionLevel)
+            .reversed());
 
     if (summonerStatsDTO.getSummonerChampionMasteryDTOS().size() > championMastersAmount) {
       for (int i = 0; i < championMastersAmount; i++) {
@@ -101,21 +107,21 @@ public class SummonerStatsCommand implements SlashCommand{
     return EmbedCreateSpec.builder()
         .color(Color.MEDIUM_SEA_GREEN)
         .title(String.format(":bar_chart: Estadísticas de %s", summonerStatsDTO.getSummonerDTO().getName()))
-        .description(String.format("> **LAS**  |  Nivel: **%d**  |  ¿Está jugando?: **%s**  \n> Última vez: %s", summonerStatsDTO.getSummonerDTO().getSummonerLevel(), isPlaying, lastRevision))
+        .description(String.format("Region: **LAS** \nNivel: **%d** \n¿Está jugando?: **%s** \nÚltima vez: %s", summonerStatsDTO.getSummonerDTO().getSummonerLevel(), isPlaying, lastRevision))
         .addField(whiteSpace, whiteSpace, !inline)
-        .addField(whiteSpace, tier.toString(), inline)
-        .addField("TIERS", type.toString(),inline)
+        .addField(whiteSpace, type.toString(), inline)
+        .addField("TIERS", tier.toString(), inline)
         .addField(whiteSpace, rank.toString(), inline)
         .addField(whiteSpace, whiteSpace, false)
-        .addField(whiteSpace, champ.toString(),inline)
-        .addField("MAESTRÍAS", level.toString(), inline)
+        .addField(whiteSpace, level.toString(),inline)
+        .addField("MAESTRÍAS", champ.toString(), inline)
         .addField(whiteSpace, points.toString(), inline)
         .build();
   }
 
   private void buildSummonerMastersEmbed(SummonerChampionMasteryDTO sumMastery, StringBuilder champ, StringBuilder level, StringBuilder points) {
-    champ.append(String.format("<:%s:%s>", "leona", "1173280999933755434")).append(" ").append(sumMastery.getChampionName()).append('\n');
-    level.append(sumMastery.getChampionLevel()).append('\n');
+    champ.append(sumMastery.getChampEmoji()).append(space).append(sumMastery.getChampionName()).append('\n');
+    level.append(sumMastery.getMasteryEmoji()).append(space).append(sumMastery.getChampionLevel()).append('\n');
     points.append(sumMastery.getChampionPoints()).append('\n');
   }
 
