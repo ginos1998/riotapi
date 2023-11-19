@@ -37,14 +37,14 @@ public class SummonerPlayingCmd implements SlashCommand {
 
     @Override
     public String getName() {
-        return "playing";
+        return "partida";
     }
 
     @Override
     public Mono<Void> handle(ChatInputInteractionEvent event) {
         try {
 
-            String name = event.getOption("name")
+            String name = event.getOption("invocador")
                     .flatMap(ApplicationCommandInteractionOption::getValue)
                     .map(ApplicationCommandInteractionOptionValue::asString)
                     .orElseThrow();

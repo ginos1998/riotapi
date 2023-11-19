@@ -1,0 +1,12 @@
+{
+  "name": "partida",
+  "description": "Obtiene informacion de la partida actual del invocador",
+  "options": [
+    {
+      "name": "invocador",
+      "description": "Nombre del invocador",
+      "type": 3,
+      "required": true
+    }
+  ]
+}
