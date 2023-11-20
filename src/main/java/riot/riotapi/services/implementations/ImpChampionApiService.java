@@ -7,6 +7,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import riot.riotapi.dtos.match.ParticipantDTO;
 import riot.riotapi.entities.Champion;
 import riot.riotapi.entities.ChampionData;
 import riot.riotapi.entities.Info;
@@ -25,6 +26,7 @@ import riot.riotapi.utils.CommonFunctions;
 import riot.riotapi.utils.ConstantsExceptions;
 import riot.riotapi.utils.URIs;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -165,6 +167,25 @@ public class ImpChampionApiService implements IntChampionApiService {
               return Mono.just(new ChampionDTO());
             })
         );
+  }
+
+  public Flux<ChampionDTO> getChampionByMatchParticipants(List<ParticipantDTO> participants) {
+    List<String> dynamicUrls = new ArrayList<>();
+    participants.forEach(participantDTO -> {
+      String url = participantDTO.getChampionId() + String.format("?spellIds=%s,%s", participantDTO.getSpell1Id(), participantDTO.getSpell2Id());
+      dynamicUrls.add(url);
+    });
+    Flux<String> dynamicUrlsFlux = Flux.fromIterable(dynamicUrls);
+    return dynamicUrlsFlux.flatMapSequential(dynamicUrl ->
+        webClient.get()
+            .uri(URIs.URI_RIOT_API_GATEWAY.concat("/champion/").concat(String.valueOf(dynamicUrl)))
+            .retrieve()
+            .bodyToMono(ChampionDTO.class)
+            .onErrorResume(err -> {
+              log.error("An error has occurred while getting champion from RiotApi Gateway. Error: {}", err.getMessage());
+              return Mono.just(new ChampionDTO());
+            })
+    );
   }
 
 }
