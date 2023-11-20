@@ -27,4 +27,7 @@ public class ChampionDTO {
   private PassiveDTO passiveDTO;
   private ArrayList<Object> recommended;
   private String dsEmoji;
+  private String spell1Emoji;
+  private String spell2Emoji;
+
 }

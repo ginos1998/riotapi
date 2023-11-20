@@ -58,7 +58,7 @@ public class MatchDelegator {
         MatchRootDTO rootDTO = matchApiService.getMatchById(matchId);
         matchDTO = createsMatchDto(rootDTO.getInfo());
 
-        if (saveData) {
+        if (Boolean.TRUE.equals(saveData)) {
           this.matchService.saveMatch(rootDTO.getInfo());
           this.summonerDelegador.saveSummoners(rootDTO.getInfo().getParticipants());
           this.summonerDelegador.saveSummonerMatch(rootDTO.getInfo().getMatchId(), rootDTO.getInfo().getParticipants());
@@ -159,7 +159,7 @@ public class MatchDelegator {
     return sumList.get(0);
   }
 
-  public Mono<MatchDTO> getSummonerLiveMatch(String sumName, String guildId) {
-    return matchApiService.getSummonerLiveMatch(sumName, guildId);
+  public Mono<MatchDTO> getSummonerLiveMatch(String sumName) {
+    return matchApiService.getSummonerLiveMatch(sumName);
   }
 }
