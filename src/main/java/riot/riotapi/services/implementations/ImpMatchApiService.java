@@ -186,9 +186,8 @@ public class ImpMatchApiService implements IntMatchApiService {
   }
 
     /**
-     * Given the fact that liveMatch endpoint provides just the ids of champions, spells, and poor info about summoners,
-     * it's necessary to complete values like summoner level, spells names, etc. making queries
-     * o calling riot's API.
+     * Since liveMatch endpoint from RiotApi provides just the ids of champions, spells, and poor info about summoners,
+     * it's necessary to complete that values calling 'summoner' RiotAPI's endpoint and 'champion' endpoint from riotapi-db
      * The result is non-blocking
      * @param participants list of participants in the liveMatch
      * @return Mono
@@ -201,8 +200,6 @@ public class ImpMatchApiService implements IntMatchApiService {
             .toList());
 
     Flux<ParticipantDTO> participantDTOFlux = Flux.fromIterable(participants);
-
-    logger.info("campeones: {}", participants.stream().map(ParticipantDTO::getChampionId).toList());
 
     Flux<ParticipantInfoDTO> resultFlux = Flux.zip(participantDTOFlux, summoners, championDTOFlux) // here the magic appears
             .map(this::completeParticipantInfoDTO);

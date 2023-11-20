@@ -155,6 +155,11 @@ public class ImpChampionApiService implements IntChampionApiService {
     return "OK";
   }
 
+  /**
+   * Calls riotapi-db to get a flux data of ChampionDTO, with championId as path variable
+   * @param championIdList a list of champion's ids
+   * @return flux data of ChampionDTO
+   */
   public Flux<ChampionDTO> getChampionByIdFlux(List<Long> championIdList) {
     Flux<Long> championIdFlux = Flux.fromIterable(championIdList);
     return championIdFlux.flatMapSequential(championId ->
@@ -169,6 +174,12 @@ public class ImpChampionApiService implements IntChampionApiService {
         );
   }
 
+  /**
+   * Calls riotapi-db to get a flux data of ChampionDTO,
+   * with championId as path variable and a list of spell's ids as query param
+   * @param participants match participants
+   * @return flux data of ChampionDTO
+   */
   public Flux<ChampionDTO> getChampionByMatchParticipants(List<ParticipantDTO> participants) {
     List<String> dynamicUrls = new ArrayList<>();
     participants.forEach(participantDTO -> {

@@ -140,6 +140,11 @@ public class ImpSummonerApiService implements IntSummonerApiService {
         });
   }
 
+  /**
+   * This make a request to get mastery by level. For example, mastery 7
+   * @param level mastery level
+   * @return flux data of MasteryDTO
+   */
   @Override
   public Flux<MasteryDTO> getMasteryByLevel(List<Long> level) {
     Flux<Long> levelsFlux = Flux.fromIterable(level);
@@ -155,6 +160,10 @@ public class ImpSummonerApiService implements IntSummonerApiService {
     );
   }
 
+  /**
+   * This make a request to get all tiers available. For example, BRONZE III
+   * @return flux data of SummonerTierDTO
+   */
   @Override
   public Flux<SummonerTierDTO> getTiersAll() {
     String uri = URIs.URI_RIOT_API_GATEWAY.concat("/tiers/all");

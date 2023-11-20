@@ -114,7 +114,7 @@ public class SummonerPlayingCmd extends Command implements SlashCommand {
     String tableTittle = circle.concat(space).concat("EQUIPO " + team).concat(space).concat(circle);
     StringBuilder summoners = new StringBuilder("**Invocador**".concat(breakLine));
     StringBuilder champions = new StringBuilder("**Campeón**".concat(breakLine));
-    StringBuilder spells = new StringBuilder("**Hechizo**".concat(breakLine));
+    StringBuilder spells = new StringBuilder("**Hechizos**".concat(breakLine));
 
     for (ParticipantInfoDTO match : teamParticipants) {
       champions.append(match.getChampionEmoji()).append(space).append(match.getChampionName()).append(breakLine);
